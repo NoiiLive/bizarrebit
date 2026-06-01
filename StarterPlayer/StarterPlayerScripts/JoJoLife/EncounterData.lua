@@ -3,7 +3,82 @@ local EncounterData = {}
 
 EncounterData.Events = {
 	{
-		MinAge=1, MaxAge=4, MinYear=0, MaxYear=9999,
+		ID="ParentBonding1", MinAge=5, MaxAge=18, MinYear=0, MaxYear=9999,
+		IsAvailable=function(s)
+			for _, rel in ipairs(s.Relationships) do
+				if not rel.IsDead and (rel.Role == "Mother" or rel.Role == "Father") then
+					return true
+				end
+			end
+			return false
+		end,
+		Setup=function(s)
+			local valid = {}
+			for _, rel in ipairs(s.Relationships) do
+				if not rel.IsDead and (rel.Role == "Mother" or rel.Role == "Father") then
+					table.insert(valid, rel)
+				end
+			end
+			if #valid > 0 then s.EventTarget = valid[math.random(1, #valid)] end
+		end,
+		Text=function(s) return "Your " .. s.EventTarget.Role .. ", " .. s.EventTarget.Name .. ", asks if you want to spend the afternoon helping them with chores." end,
+		Options={
+			{Text="Help them happily", Outcomes={{Weight=10, ResultText=function(s) return "You spent quality time with your " .. s.EventTarget.Role .. "!" end, StatChanges={Closeness=10, Happiness=5}}}},
+			{Text="Complain the whole time", Outcomes={{Weight=10, ResultText="You were completely insufferable to be around.", StatChanges={Closeness=-10, Happiness=-5}}}}
+		}
+	},
+	{
+		ID="SiblingTrouble1", MinAge=4, MaxAge=18, MinYear=0, MaxYear=9999,
+		IsAvailable=function(s)
+			for _, rel in ipairs(s.Relationships) do
+				if not rel.IsDead and (rel.Role == "Brother" or rel.Role == "Sister") then
+					return true
+				end
+			end
+			return false
+		end,
+		Setup=function(s)
+			local valid = {}
+			for _, rel in ipairs(s.Relationships) do
+				if not rel.IsDead and (rel.Role == "Brother" or rel.Role == "Sister") then
+					table.insert(valid, rel)
+				end
+			end
+			if #valid > 0 then s.EventTarget = valid[math.random(1, #valid)] end
+		end,
+		Text=function(s) return "Your " .. string.lower(s.EventTarget.Role) .. ", " .. s.EventTarget.Name .. ", breaks a vase and asks you to take the blame." end,
+		Options={
+			{Text="Take the blame", Outcomes={{Weight=10, ResultText=function(s) return "You covered for them. You got grounded, but your " .. string.lower(s.EventTarget.Role) .. " owes you one." end, StatChanges={Closeness=15, Happiness=-10}}}},
+			{Text="Snitch immediately", Outcomes={{Weight=10, ResultText="You sold them out instantly. They are furious.", StatChanges={Closeness=-20, Happiness=5}}}}
+		}
+	},
+	{
+		ID="FriendArcade1", MinAge=8, MaxAge=999, MinYear=0, MaxYear=9999,
+		IsAvailable=function(s)
+			for _, rel in ipairs(s.Relationships) do
+				if not rel.IsDead and rel.Role == "Friend" then
+					return true
+				end
+			end
+			return false
+		end,
+		Setup=function(s)
+			local valid = {}
+			for _, rel in ipairs(s.Relationships) do
+				if not rel.IsDead and rel.Role == "Friend" then
+					table.insert(valid, rel)
+				end
+			end
+			if #valid > 0 then s.EventTarget = valid[math.random(1, #valid)] end
+		end,
+		Text=function(s) return "Your friend, " .. s.EventTarget.Name .. ", wants to go hang out at the local arcade." end,
+		Options={
+			{Text="Go with them ($5)", IsAvailable=function(s) return s.Money >= 5 end, Outcomes={{Weight=10, ResultText="You both had a blast playing fighting games!", StatChanges={Closeness=12, Happiness=10, Money=-5}}}},
+			{Text="Decline", Outcomes={{Weight=10, ResultText="You decided to stay home. They went alone.", StatChanges={Closeness=-5, Happiness=-2}}}}
+		}
+	},
+	{
+		ID="Encounter1", MinAge=1, MaxAge=4, MinYear=0, MaxYear=9999,
 		Text="You are trying to take your first steps, but the dog is in the way.",
 		Options={
 			{Text="Crawl around it", Outcomes={{Weight=8, ResultText="You successfully navigated the obstacle.", StatChanges={Intelligence=2}}, {Weight=2, ResultText="You bumped your head on the table leg.", StatChanges={LifeForce=-3, Happiness=-3}}}},
@@ -11,7 +86,7 @@ EncounterData.Events = {
 		}
 	},
 	{
-		MinAge=2, MaxAge=6, MinYear=1900, MaxYear=9999,
+		ID="Encounter2", MinAge=2, MaxAge=6, MinYear=1900, MaxYear=9999,
 		Text="You found a colorful crayon on the floor.",
 		Options={
 			{Text="Draw on the wall", Outcomes={{Weight=6, ResultText="You created a masterpiece, but your parents were furious.", StatChanges={Happiness=4, Intelligence=2}}, {Weight=4, ResultText="You got put in time-out immediately.", StatChanges={Happiness=-8}}}},
@@ -19,7 +94,7 @@ EncounterData.Events = {
 		}
 	},
 	{
-		MinAge=3, MaxAge=8, MinYear=1900, MaxYear=9999,
+		ID="Encounter3", MinAge=3, MaxAge=8, MinYear=1900, MaxYear=9999,
 		Text="You accidentally dropped your ice cream cone on the sidewalk.",
 		Options={
 			{Text="Cry loudly", Outcomes={{Weight=7, ResultText="Your parents felt bad and bought you another one.", StatChanges={Happiness=5}}, {Weight=3, ResultText="They told you to stop crying. You are now ice cream-less.", StatChanges={Happiness=-8}}}},
@@ -27,7 +102,15 @@ EncounterData.Events = {
 		}
 	},
 	{
-		MinAge=5, MaxAge=11, MinYear=0, MaxYear=9999,
+		ID="Encounter4", MinAge=4, MaxAge=10, MinYear=0, MaxYear=9999,
+		Text="You see another kid building an incredibly bizarre sandcastle.",
+		Options={
+			{Text="Help them build", Outcomes={{Weight=7, ResultText="You worked together and made a masterpiece! You hit it off instantly.", StatChanges={Happiness=8, NewFriend="Friend"}}, {Weight=3, ResultText="You accidentally knocked down a tower. They yelled at you.", StatChanges={Happiness=-5}}}},
+			{Text="Kick it down", Outcomes={{Weight=10, ResultText="You destroyed their hard work. You feel like a villain.", StatChanges={Happiness=5, Bizarreness=2}}}}
+		}
+	},
+	{
+		ID="Encounter5", MinAge=5, MaxAge=11, MinYear=0, MaxYear=9999,
 		Text="A strange stray dog with a severe underbite just stole your lunch.",
 		Options={
 			{Text="Chase it", Outcomes={{Weight=function(s) return s.Strength end, ResultText="You caught up and got your food back, getting a good workout.", StatChanges={Strength=4, Happiness=3}}, {Weight=function(s) return 100-s.Strength+10 end, ResultText="It ran way too fast. You tripped and scraped your knee.", StatChanges={LifeForce=-6, Happiness=-6}}}},
@@ -37,16 +120,16 @@ EncounterData.Events = {
 		}
 	},
 	{
-		MinAge=5, MaxAge=12, MinYear=0, MaxYear=9999,
+		ID="Encounter6", MinAge=5, MaxAge=12, MinYear=0, MaxYear=9999,
 		Text="A kid in the sandbox claims his dad is a famous marine biologist.",
 		Options={
-			{Text="Ask about dolphins", Outcomes={{Weight=8, ResultText="He told you amazing facts about ocean life.", StatChanges={Intelligence=6, Happiness=4}}, {Weight=2, ResultText="He ignored you and kept digging.", StatChanges={Happiness=-3}}}},
+			{Text="Ask about dolphins", Outcomes={{Weight=8, ResultText="He told you amazing facts about ocean life and you hit it off.", StatChanges={Intelligence=6, Happiness=4, NewFriend="Friend"}}, {Weight=2, ResultText="He ignored you and kept digging.", StatChanges={Happiness=-3}}}},
 			{Text="Call him a liar", Outcomes={{Weight=function(s) return s.Strength end, ResultText="He tried to push you, but you stood your ground.", StatChanges={Happiness=3}}, {Weight=function(s) return 100-s.Strength+20 end, ResultText="He threw sand in your eyes.", StatChanges={LifeForce=-6, Happiness=-8}}}},
 			{Text="Show him a cool rock", Outcomes={{Weight=10, ResultText="You traded the rock for a neat starfish shell.", StatChanges={Happiness=6}}}}
 		}
 	},
 	{
-		MinAge=6, MaxAge=12, MinYear=1800, MaxYear=9999, IsBizarre=true,
+		ID="Encounter7", MinAge=6, MaxAge=12, MinYear=1800, MaxYear=9999, IsBizarre=true,
 		Text="During a museum field trip, you find a weirdly sharp stone mask.",
 		Options={
 			{Text="Try it on", Outcomes={{Weight=3, ResultText="It didn't fit, but you felt a cold surge of ancient energy.", StatChanges={Body=4, Intelligence=2, Bizarreness=4}}, {Weight=7, ResultText="You scratched your face on the stone and got in trouble.", StatChanges={LifeForce=-8, Happiness=-8}}}},
@@ -55,7 +138,7 @@ EncounterData.Events = {
 		}
 	},
 	{
-		MinAge=6, MaxAge=10, MinYear=1880, MaxYear=9999,
+		ID="Encounter8", MinAge=6, MaxAge=10, MinYear=1880, MaxYear=9999,
 		Text="Your dad is trying to teach you how to ride a bicycle without training wheels.",
 		Options={
 			{Text="Pedal as hard as you can", Outcomes={{Weight=function(s) return s.Strength end, ResultText="You caught your balance and rode all the way down the street!", StatChanges={Happiness=8, Strength=4}}, {Weight=function(s) return 100-s.Strength+20 end, ResultText="You completely lost control and crashed into a mailbox.", StatChanges={LifeForce=-10, Happiness=-6}}}},
@@ -63,7 +146,7 @@ EncounterData.Events = {
 		}
 	},
 	{
-		MinAge=1, MaxAge=10, MinYear=0, MaxYear=9999, IsBizarre=true,
+		ID="Encounter9", MinAge=1, MaxAge=10, MinYear=0, MaxYear=9999, IsBizarre=true,
 		Text="You found a bizarre, colorful stag beetle in the yard.",
 		Options={
 			{Text="Watch it", Outcomes={{Weight=7, ResultText="You observed its strange patterns and learned about nature.", StatChanges={Intelligence=6, Happiness=4, Bizarreness=2}}, {Weight=3, ResultText="It spit a weird liquid in your eye.", StatChanges={LifeForce=-8, Happiness=-6}}}},
@@ -73,7 +156,7 @@ EncounterData.Events = {
 		}
 	},
 	{
-		MinAge=11, MaxAge=17, MinYear=0, MaxYear=9999, IsBizarre=true,
+		ID="Encounter10", MinAge=11, MaxAge=17, MinYear=0, MaxYear=9999, IsBizarre=true,
 		Text="You notice a peculiar star-shaped birthmark on the back of your shoulder.",
 		IsAvailable=function(s) local n={Joestar=true,Kujo=true,Higashikata=true,Giovanna=true,Cujoh=true} return n[s.LastName]==true end,
 		Options={
@@ -83,7 +166,7 @@ EncounterData.Events = {
 		}
 	},
 	{
-		MinAge=13, MaxAge=18, MinYear=1850, MaxYear=9999,
+		ID="Encounter11", MinAge=13, MaxAge=18, MinYear=1850, MaxYear=9999,
 		Text="You have a massive final exam in math today, and you barely studied.",
 		Options={
 			{Text="Try your best", Outcomes={{Weight=function(s) return s.Intelligence end, ResultText="You remembered enough to pass with a decent grade!", StatChanges={Intelligence=4, Happiness=6}}, {Weight=function(s) return 100-s.Intelligence+20 end, ResultText="You failed miserably and your parents grounded you.", StatChanges={Happiness=-12}}}},
@@ -93,7 +176,16 @@ EncounterData.Events = {
 		}
 	},
 	{
-		MinAge=11, MaxAge=17, MinYear=1930, MaxYear=9999, IsBizarre=true,
+		ID="Encounter12", MinAge=14, MaxAge=18, MinYear=1980, MaxYear=9999,
+		Text="A transfer student with a strange hairstyle sits next to you in class.",
+		Options={
+			{Text="Compliment their hair", Outcomes={{Weight=8, ResultText="They beamed with joy and talked to you all period. You made a friend!", StatChanges={Happiness=6, NewFriend="Friend"}}, {Weight=2, ResultText="They thought you were being sarcastic and glared at you.", StatChanges={Happiness=-4}}}},
+			{Text="Insult their hair", Outcomes={{Weight=10, ResultText="They flew into a blind rage and pummeled you into a desk!", StatChanges={LifeForce=-15, Happiness=-10, Body=-5}}}},
+			{Text="Ignore them", Outcomes={{Weight=10, ResultText="You focused on the lesson.", StatChanges={Intelligence=2}}}}
+		}
+	},
+	{
+		ID="Encounter13", MinAge=11, MaxAge=17, MinYear=1930, MaxYear=9999, IsBizarre=true,
 		Text="You found a weird comic book that seems to predict things before they happen.",
 		Options={
 			{Text="Follow its instructions", Outcomes={{Weight=4, ResultText="You narrowly avoided a falling pot and found twenty dollars!", StatChanges={Happiness=12, Money=20, Bizarreness=4}}, {Weight=6, ResultText="You followed it blindly and walked straight into a telephone pole.", StatChanges={LifeForce=-10, Happiness=-8}}}},
@@ -102,7 +194,7 @@ EncounterData.Events = {
 		}
 	},
 	{
-		MinAge=13, MaxAge=25, MinYear=0, MaxYear=9999,
+		ID="Encounter14", MinAge=13, MaxAge=25, MinYear=0, MaxYear=9999,
 		Text="A buff teenager posed menacingly at you in the hall.",
 		Options={
 			{Text="Pose back", Outcomes={{Weight=function(s) return s.Strength end, ResultText="You struck a dramatic pose. Respect was earned, and you feel great.", StatChanges={Happiness=10, Strength=2}}, {Weight=function(s) return 100-s.Strength+10 end, ResultText="You pulled a muscle trying to bend that way.", StatChanges={LifeForce=-8, Happiness=-6}}}},
@@ -111,7 +203,7 @@ EncounterData.Events = {
 		}
 	},
 	{
-		MinAge=16, MaxAge=25, MinYear=1950, MaxYear=9999,
+		ID="Encounter15", MinAge=16, MaxAge=25, MinYear=1950, MaxYear=9999,
 		Text="You noticed a 'Help Wanted' sign at a local fast food joint.",
 		IsAvailable=function(s) return s.Job=="Unemployed" end,
 		Options={
@@ -120,7 +212,7 @@ EncounterData.Events = {
 		}
 	},
 	{
-		MinAge=15, MaxAge=40, MinYear=1990, MaxYear=2010, IsBizarre=true,
+		ID="Encounter16", MinAge=15, MaxAge=40, MinYear=1990, MaxYear=2010, IsBizarre=true,
 		Text="A sharply dressed man offers you a position in his 'family' business.",
 		IsAvailable=function(s) return s.Job=="Unemployed" end,
 		Options={
@@ -130,7 +222,7 @@ EncounterData.Events = {
 		}
 	},
 	{
-		MinAge=22, MaxAge=40, MinYear=1970, MaxYear=9999,
+		ID="Encounter17", MinAge=22, MaxAge=40, MinYear=1970, MaxYear=9999,
 		Text="A position opened up at the Speedwagon Foundation.",
 		IsAvailable=function(s) return s.Job~="Foundation Agent" and s.Job~="Stand Specialist" end,
 		Options={
@@ -140,7 +232,7 @@ EncounterData.Events = {
 		}
 	},
 	{
-		MinAge=10, MaxAge=25, MinYear=1980, MaxYear=2005,
+		ID="Encounter18", MinAge=10, MaxAge=25, MinYear=1980, MaxYear=2005,
 		Text="You found an old arcade cabinet with an unbeatable high score.",
 		Options={
 			{Text="Insert coin and play", Outcomes={{Weight=function(s) return s.Intelligence end, ResultText="You figured out the boss patterns and beat the high score!", StatChanges={Happiness=12, Intelligence=2}}, {Weight=function(s) return 100-s.Intelligence+20 end, ResultText="You spent all your allowance and lost on level three.", StatChanges={Happiness=-8, Money=-10}}}},
@@ -148,7 +240,7 @@ EncounterData.Events = {
 		}
 	},
 	{
-		MinAge=18, MaxAge=999, MinYear=1800, MaxYear=1920,
+		ID="Encounter19", MinAge=18, MaxAge=999, MinYear=1800, MaxYear=1920,
 		Text="A horse-drawn carriage kicks up mud right onto your best clothes.",
 		Options={
 			{Text="Yell at the driver", Outcomes={{Weight=5, ResultText="The driver felt awful and tossed you some coins for the trouble.", StatChanges={Money=20, Happiness=-3}}, {Weight=5, ResultText="The driver ignored you completely.", StatChanges={Happiness=-8}}}},
@@ -157,7 +249,7 @@ EncounterData.Events = {
 		}
 	},
 	{
-		MinAge=18, MaxAge=999, MinYear=0, MaxYear=9999, IsBizarre=true,
+		ID="Encounter20", MinAge=18, MaxAge=999, MinYear=0, MaxYear=9999, IsBizarre=true,
 		Text="You found a weird old man doing breathing exercises on a park bench.",
 		IsAvailable=function(s) return s.Race~="Hamon User" end,
 		Options={
@@ -167,7 +259,7 @@ EncounterData.Events = {
 		}
 	},
 	{
-		MinAge=18, MaxAge=999, MinYear=1920, MaxYear=9999,
+		ID="Encounter21", MinAge=18, MaxAge=999, MinYear=1920, MaxYear=9999,
 		Text="You got a flat tire on the highway in the pouring rain.",
 		Options={
 			{Text="Change it yourself", Outcomes={{Weight=function(s) return s.Intelligence end, ResultText="You successfully swapped the tire and got home safe.", StatChanges={Intelligence=4, Strength=2}}, {Weight=function(s) return 100-s.Intelligence+20 end, ResultText="The jack slipped and the car pinched your hand.", StatChanges={LifeForce=-12, Happiness=-10}}}},
@@ -178,7 +270,7 @@ EncounterData.Events = {
 		}
 	},
 	{
-		MinAge=18, MaxAge=999, MinYear=0, MaxYear=9999, IsBizarre=true,
+		ID="Encounter22", MinAge=18, MaxAge=999, MinYear=0, MaxYear=9999, IsBizarre=true,
 		Text="You found a strange, golden arrow in the attic of your new house.",
 		IsAvailable=function(s) return s.Stand=="None" end,
 		Options={
@@ -192,7 +284,7 @@ EncounterData.Events = {
 		}
 	},
 	{
-		MinAge=18, MaxAge=999, MinYear=1980, MaxYear=9999, IsBizarre=true,
+		ID="Encounter23", MinAge=18, MaxAge=999, MinYear=1980, MaxYear=9999, IsBizarre=true,
 		Text="A man offers to play a high-stakes game of poker for your soul.",
 		Options={
 			{Text="Bet it all ($1000)", IsAvailable=function(s) return s.Money>=1000 end, Outcomes={{Weight=function(s) return s.Intelligence end, ResultText="You outsmarted his cheating! You won big.", StatChanges={Money=5000, Happiness=20}}, {Weight=function(s) return 100-s.Intelligence+20 end, ResultText="He stole your chips and part of your soul.", StatChanges={Money=-1000, LifeForce=-25, Happiness=-25}}}},
@@ -201,7 +293,7 @@ EncounterData.Events = {
 		}
 	},
 	{
-		MinAge=18, MaxAge=999, MinYear=0, MaxYear=9999, IsBizarre=true,
+		ID="Encounter24", MinAge=18, MaxAge=999, MinYear=0, MaxYear=9999, IsBizarre=true,
 		Text="A priest with peculiar hair starts talking to you about 'Gravity' and 'Heaven'.",
 		Options={
 			{Text="Listen closely", Outcomes={{Weight=function(s) return s.Intelligence end, ResultText="His philosophical words expanded your mind.", StatChanges={Intelligence=12, Happiness=6, Bizarreness=4}}, {Weight=function(s) return 100-s.Intelligence+20 end, ResultText="You got a severe headache trying to comprehend his logic.", StatChanges={LifeForce=-6, Happiness=-8}}}},
@@ -210,7 +302,7 @@ EncounterData.Events = {
 		}
 	},
 	{
-		MinAge=18, MaxAge=999, MinYear=1990, MaxYear=9999, IsBizarre=true,
+		ID="Encounter25", MinAge=18, MaxAge=999, MinYear=1990, MaxYear=9999, IsBizarre=true,
 		Text="You found a severed hand in a fast food bag you just bought.",
 		Options={
 			{Text="Call the police", Outcomes={{Weight=6, ResultText="The police took the bag as evidence. You are traumatized but safe.", StatChanges={Happiness=-20, Intelligence=4}}, {Weight=4, ResultText="A man in a purple suit intercepted you before you could dial.", StatChanges={LifeForce=-40, Happiness=-25}}}},
@@ -219,7 +311,7 @@ EncounterData.Events = {
 		}
 	},
 	{
-		MinAge=18, MaxAge=999, MinYear=0, MaxYear=9999, IsBizarre=true,
+		ID="Encounter26", MinAge=18, MaxAge=999, MinYear=0, MaxYear=9999, IsBizarre=true,
 		Text="An enemy Stand user suddenly attacks you in the street!",
 		IsAvailable=function(s) return s.Stand~="None" end,
 		Options={
@@ -230,7 +322,7 @@ EncounterData.Events = {
 		}
 	},
 	{
-		MinAge=18, MaxAge=999, MinYear=1800, MaxYear=9999, IsBizarre=true,
+		ID="Encounter27", MinAge=18, MaxAge=999, MinYear=1800, MaxYear=9999, IsBizarre=true,
 		Text="A pale, aristocratic man in an alleyway offers you power in exchange for your humanity.",
 		IsAvailable=function(s) return s.Race~="Vampire" and s.Race~="Zombie" end,
 		Options={
@@ -241,7 +333,7 @@ EncounterData.Events = {
 		}
 	},
 	{
-		MinAge=18, MaxAge=999, MinYear=1900, MaxYear=9999, IsBizarre=true,
+		ID="Encounter28", MinAge=18, MaxAge=999, MinYear=1900, MaxYear=9999, IsBizarre=true,
 		Text="You found a strange Italian restaurant that looks extremely authentic.",
 		Options={
 			{Text="Eat the special ($80)", IsAvailable=function(s) return s.Money>=80 and s.Race~="Zombie" end, Outcomes={{Weight=8, ResultText="Your cavities fell out and regrew instantly! It was an incredibly healthy meal.", StatChanges={Body=25, Happiness=15, Money=-80, Bizarreness=4}}, {Weight=2, ResultText="It was too spicy and you had a terrible stomach ache.", StatChanges={Body=-6, Happiness=-10, Money=-80}}}},
@@ -251,7 +343,7 @@ EncounterData.Events = {
 		}
 	},
 	{
-		MinAge=18, MaxAge=999, MinYear=2015, MaxYear=9999,
+		ID="Encounter29", MinAge=18, MaxAge=999, MinYear=2015, MaxYear=9999,
 		Text="You went on a blind date, but they haven't stopped talking about crypto for an hour.",
 		Options={
 			{Text="Politely listen", Outcomes={{Weight=10, ResultText="You suffered through the night. It was exhausting.", StatChanges={Happiness=-8, LifeForce=-3}}}},
