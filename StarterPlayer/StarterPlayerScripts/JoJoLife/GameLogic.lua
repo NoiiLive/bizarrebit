@@ -57,7 +57,9 @@ GameLogic.Stats = {
 	Bizarreness = 0,
 	LifespanRoll = 1.0,
 	SeenEvents = {},
-	Relationships = {}
+	Relationships = {},
+	EventTarget = nil,
+	NewFriend = ""
 }
 
 GameLogic.MaxStats = {
@@ -96,14 +98,47 @@ function GameLogic.ResetStats()
 	GameLogic.Stats.LifespanRoll = 0.8 + (math.random() * 0.2)
 
 	GameLogic.Stats.SeenEvents = {}
+	GameLogic.Stats.EventTarget = nil
 
 	local fatherFirstName = GameLogic.FirstNames.Male[math.random(1, #GameLogic.FirstNames.Male)]
 	local motherFirstName = GameLogic.FirstNames.Female[math.random(1, #GameLogic.FirstNames.Female)]
+	local motherAge = math.random(20, 42)
 
 	GameLogic.Stats.Relationships = {
-		{Name = fatherFirstName .. " " .. GameLogic.Stats.LastName, Role = "Father", Age = math.random(22, 45), Race = "Human", LifespanRoll = 0.8 + (math.random() * 0.2), IsDead = false},
-		{Name = motherFirstName .. " " .. GameLogic.Stats.LastName, Role = "Mother", Age = math.random(20, 42), Race = "Human", LifespanRoll = 0.8 + (math.random() * 0.2), IsDead = false}
+		{Name = fatherFirstName .. " " .. GameLogic.Stats.LastName, Role = "Father", Age = math.random(22, 45), Race = "Human", LifespanRoll = 0.8 + (math.random() * 0.2), IsDead = false, Gender = "Male", Stand = "None", Closeness = math.random(60, 100)},
+		{Name = motherFirstName .. " " .. GameLogic.Stats.LastName, Role = "Mother", Age = motherAge, Race = "Human", LifespanRoll = 0.8 + (math.random() * 0.2), IsDead = false, Gender = "Female", Stand = "None", Closeness = math.random(60, 100)}
 	}
+
+	local siblingChance = math.random(1, 100)
+	local siblingCount = 0
+
+	if siblingChance <= 30 then
+		siblingCount = 1
+	elseif siblingChance <= 45 then
+		siblingCount = 2
+	end
+
+	for i = 1, siblingCount do
+		local maxSiblingAge = motherAge - 18
+		if maxSiblingAge >= 1 then
+			local siblingAge = math.random(1, maxSiblingAge)
+			local sibGender = math.random() > 0.5 and "Male" or "Female"
+			local sibNamePool = sibGender == "Male" and GameLogic.FirstNames.Male or GameLogic.FirstNames.Female
+			local sibName = sibNamePool[math.random(1, #sibNamePool)]
+			local sibRole = sibGender == "Male" and "Brother" or "Sister"
+			table.insert(GameLogic.Stats.Relationships, {
+				Name = sibName .. " " .. GameLogic.Stats.LastName,
+				Role = sibRole,
+				Age = siblingAge,
+				Race = "Human",
+				LifespanRoll = 0.8 + (math.random() * 0.2),
+				IsDead = false,
+				Gender = sibGender,
+				Stand = "None",
+				Closeness = math.random(40, 90)
+			})
+		end
+	end
 end
 
 function GameLogic.UpdateStatsUI(gui)
@@ -141,6 +176,85 @@ function GameLogic.UpdateStatsUI(gui)
 	updateBar("Intelligence")
 end
 
+function GameLogic.PopulateRelationships(listFrame)
+	for _, child in ipairs(listFrame:GetChildren()) do
+		if child:IsA("Frame") then
+			child:Destroy()
+		end
+	end
+
+	local layout = listFrame:FindFirstChildOfClass("UIListLayout")
+	if not layout then
+		layout = Instance.new("UIListLayout")
+		layout.SortOrder = Enum.SortOrder.LayoutOrder
+		layout.Padding = UDim.new(0, 10)
+		layout.Parent = listFrame
+	end
+
+	for i, rel in ipairs(GameLogic.Stats.Relationships) do
+		if not rel.IsDead then
+			local item = Instance.new("Frame")
+			item.Size = UDim2.new(1, 0, 0, 100)
+			item.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+			item.BorderSizePixel = 0
+			item.LayoutOrder = i
+
+			local corner = Instance.new("UICorner")
+			corner.CornerRadius = UDim.new(0, 8)
+			corner.Parent = item
+
+			local nameLabel = Instance.new("TextLabel")
+			nameLabel.Size = UDim2.new(1, -20, 0, 30)
+			nameLabel.Position = UDim2.new(0, 10, 0, 5)
+			nameLabel.BackgroundTransparency = 1
+			nameLabel.Text = rel.Name .. " (" .. rel.Role .. ")"
+			nameLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+			nameLabel.TextSize = 20
+			nameLabel.Font = Enum.Font.GothamBold
+			nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+			nameLabel.Parent = item
+
+			local infoLabel = Instance.new("TextLabel")
+			infoLabel.Size = UDim2.new(1, -20, 0, 20)
+			infoLabel.Position = UDim2.new(0, 10, 0, 35)
+			infoLabel.BackgroundTransparency = 1
+			infoLabel.Text = "Age: " .. rel.Age .. " | Gender: " .. rel.Gender .. " | Race: " .. rel.Race .. " | Stand: " .. rel.Stand
+			infoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+			infoLabel.TextSize = 14
+			infoLabel.Font = Enum.Font.Gotham
+			infoLabel.TextXAlignment = Enum.TextXAlignment.Left
+			infoLabel.Parent = item
+
+			local closeTitle = Instance.new("TextLabel")
+			closeTitle.Size = UDim2.new(0, 100, 0, 20)
+			closeTitle.Position = UDim2.new(0, 10, 0, 65)
+			closeTitle.BackgroundTransparency = 1
+			closeTitle.Text = "Closeness:"
+			closeTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+			closeTitle.TextSize = 14
+			closeTitle.Font = Enum.Font.GothamBold
+			closeTitle.TextXAlignment = Enum.TextXAlignment.Left
+			closeTitle.Parent = item
+
+			local barBg = Instance.new("Frame")
+			barBg.Size = UDim2.new(1, -120, 0, 16)
+			barBg.Position = UDim2.new(0, 110, 0, 67)
+			barBg.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+			barBg.Parent = item
+			Instance.new("UICorner", barBg).CornerRadius = UDim.new(0, 4)
+
+			local barFill = Instance.new("Frame")
+			local pct = math.clamp(rel.Closeness / 100, 0, 1)
+			barFill.Size = UDim2.new(pct, 0, 1, 0)
+			barFill.BackgroundColor3 = Color3.fromRGB(80, 220, 100)
+			barFill.Parent = barBg
+			Instance.new("UICorner", barFill).CornerRadius = UDim.new(0, 4)
+
+			item.Parent = listFrame
+		end
+	end
+end
+
 function GameLogic.Start(player)
 	GameLogic.ResetStats()
 	local gui = UIBuilder.Build(player)
@@ -174,7 +288,7 @@ function GameLogic.Start(player)
 		local popupOverlay = mainFrame:WaitForChild("PopupOverlay")
 		if popupOverlay.Visible then return end
 
-		UIBuilder.UpdateRelationshipsMenu(relListFrame, GameLogic.Stats.Relationships)
+		GameLogic.PopulateRelationships(relListFrame)
 		relOverlay.Visible = true
 	end)
 
@@ -216,13 +330,19 @@ end
 function GameLogic.AgeUp(gui, logFrame)
 	GameLogic.Stats.Age = GameLogic.Stats.Age + 1
 	GameLogic.Stats.Year = GameLogic.Stats.Year + 1
+	GameLogic.Stats.EventTarget = nil
 
 	local deadRelative = nil
+	local mother = nil
 
 	if GameLogic.Stats.Relationships then
 		for _, rel in ipairs(GameLogic.Stats.Relationships) do
 			if not rel.IsDead then
 				rel.Age = rel.Age + 1
+
+				if rel.Role == "Mother" then
+					mother = rel
+				end
 
 				local raceMaxAges = { Human = 110, ["Hamon User"] = 150, Zombie = 200, Vampire = 300 }
 				local maxAgeForRace = raceMaxAges[rel.Race] or 110
@@ -237,6 +357,27 @@ function GameLogic.AgeUp(gui, logFrame)
 					end
 				end
 			end
+		end
+	end
+
+	if mother and mother.Age <= 40 and not mother.IsDead then
+		if math.random(1, 100) <= 8 then
+			local sibGender = math.random() > 0.5 and "Male" or "Female"
+			local sibNamePool = sibGender == "Male" and GameLogic.FirstNames.Male or GameLogic.FirstNames.Female
+			local sibName = sibNamePool[math.random(1, #sibNamePool)]
+			local sibRole = sibGender == "Male" and "Brother" or "Sister"
+			table.insert(GameLogic.Stats.Relationships, {
+				Name = sibName .. " " .. GameLogic.Stats.LastName,
+				Role = sibRole,
+				Age = 0,
+				Race = "Human",
+				LifespanRoll = 0.8 + (math.random() * 0.2),
+				IsDead = false,
+				Gender = sibGender,
+				Stand = "None",
+				Closeness = 50
+			})
+			UIBuilder.AddLogText(logFrame, "Your parents had a new baby! You have a new " .. string.lower(sibRole) .. " named " .. sibName .. ".", Color3.fromRGB(240, 200, 200))
 		end
 	end
 
@@ -262,7 +403,7 @@ function GameLogic.AgeUp(gui, logFrame)
 
 	if deadRelative then
 		local deathEncounter = {
-			Text = "Tragedy strikes. Your " .. deadRelative.Role .. ", " .. deadRelative.Name .. ", has passed away at the age of " .. deadRelative.Age .. ".",
+			Text = "Tragedy strikes. Your " .. string.lower(deadRelative.Role) .. ", " .. deadRelative.Name .. ", has passed away at the age of " .. deadRelative.Age .. ".",
 			Options = {
 				{
 					Text = "Attend the funeral",
@@ -319,7 +460,9 @@ function GameLogic.AgeUp(gui, logFrame)
 
 		if GameLogic.Stats.Age >= minAge and GameLogic.Stats.Age <= maxAge and GameLogic.Stats.Year >= minYear and GameLogic.Stats.Year <= maxYear and isAvailable then
 			table.insert(validEvents, event)
-			if not GameLogic.Stats.SeenEvents[event.Text] then
+			local eventKey = event.ID or event.Text
+			if type(eventKey) ~= "string" then eventKey = tostring(eventKey) end
+			if not GameLogic.Stats.SeenEvents[eventKey] then
 				table.insert(unseenEvents, event)
 			end
 		end
@@ -352,7 +495,14 @@ function GameLogic.AgeUp(gui, logFrame)
 			end
 		end
 
-		GameLogic.Stats.SeenEvents[randomEvent.Text] = true
+		local eventKey = randomEvent.ID or randomEvent.Text
+		if type(eventKey) ~= "string" then eventKey = tostring(eventKey) end
+		GameLogic.Stats.SeenEvents[eventKey] = true
+
+		if randomEvent.Setup then
+			randomEvent.Setup(GameLogic.Stats)
+		end
+
 		GameLogic.ShowPopup(gui, logFrame, randomEvent)
 	else
 		UIBuilder.AddLogText(logFrame, "Nothing particularly bizarre happened this year.", Color3.fromRGB(150, 150, 150))
@@ -368,7 +518,8 @@ function GameLogic.ShowPopup(gui, logFrame, encounterData)
 	local popupText = popupFrame:WaitForChild("PopupText")
 	local optionsFrame = popupFrame:WaitForChild("OptionsFrame")
 
-	popupText.Text = encounterData.Text
+	local popupTextStr = type(encounterData.Text) == "function" and encounterData.Text(GameLogic.Stats) or encounterData.Text
+	popupText.Text = popupTextStr
 	UIBuilder.ClearOptions(optionsFrame)
 
 	for _, option in ipairs(encounterData.Options) do
@@ -378,7 +529,8 @@ function GameLogic.ShowPopup(gui, logFrame, encounterData)
 		end
 
 		if isAvailable then
-			local btn = UIBuilder.CreateOptionButton(optionsFrame, option.Text)
+			local optText = type(option.Text) == "function" and option.Text(GameLogic.Stats) or option.Text
+			local btn = UIBuilder.CreateOptionButton(optionsFrame, optText)
 			btn.MouseButton1Click:Connect(function()
 				popupOverlay.Visible = false
 				GameLogic.ResolveEncounter(gui, logFrame, option)
@@ -425,13 +577,19 @@ function GameLogic.ResolveEncounter(gui, logFrame, option)
 		end
 	end
 
-	UIBuilder.AddLogText(logFrame, selectedOutcome.ResultText, Color3.fromRGB(255, 255, 255))
+	local resText = type(selectedOutcome.ResultText) == "function" and selectedOutcome.ResultText(GameLogic.Stats) or selectedOutcome.ResultText
+	UIBuilder.AddLogText(logFrame, resText, Color3.fromRGB(255, 255, 255))
 
 	local preHealth = math.floor((GameLogic.Stats.Strength + GameLogic.Stats.Body + GameLogic.Stats.LifeForce) / 3)
 
 	if selectedOutcome.StatChanges then
 		for stat, value in pairs(selectedOutcome.StatChanges) do
-			if GameLogic.Stats[stat] ~= nil then
+			if stat == "Closeness" and GameLogic.Stats.EventTarget then
+				GameLogic.Stats.EventTarget.Closeness = math.clamp(GameLogic.Stats.EventTarget.Closeness + value, 0, 100)
+				local sign = value > 0 and "+" or ""
+				local color = value > 0 and Color3.fromRGB(80, 220, 100) or Color3.fromRGB(200, 50, 60)
+				UIBuilder.AddLogText(logFrame, sign .. value .. " Closeness with " .. GameLogic.Stats.EventTarget.Name, color)
+			elseif GameLogic.Stats[stat] ~= nil then
 				if type(value) == "number" then
 					GameLogic.Stats[stat] = GameLogic.Stats[stat] + value
 
@@ -447,13 +605,32 @@ function GameLogic.ResolveEncounter(gui, logFrame, option)
 						UIBuilder.AddLogText(logFrame, sign .. value .. " " .. stat, color)
 					end
 				elseif type(value) == "string" then
-					GameLogic.Stats[stat] = value
-					if stat == "Stand" then
-						UIBuilder.AddLogText(logFrame, "You awakened a Stand: " .. value .. "!", Color3.fromRGB(150, 150, 255))
-					elseif stat == "Job" then
-						UIBuilder.AddLogText(logFrame, "You were hired as a " .. value .. ".", Color3.fromRGB(80, 220, 100))
+					if stat == "NewFriend" then
+						local friendGender = math.random() > 0.5 and "Male" or "Female"
+						local friendPool = friendGender == "Male" and GameLogic.FirstNames.Male or GameLogic.FirstNames.Female
+						local fName = friendPool[math.random(1, #friendPool)]
+						local lName = GameLogic.LastNames[math.random(1, #GameLogic.LastNames)]
+						table.insert(GameLogic.Stats.Relationships, {
+							Name = fName .. " " .. lName,
+							Role = "Friend",
+							Age = GameLogic.Stats.Age,
+							Race = "Human",
+							LifespanRoll = 0.8 + (math.random() * 0.2),
+							IsDead = false,
+							Gender = friendGender,
+							Stand = "None",
+							Closeness = math.random(40, 70)
+						})
+						UIBuilder.AddLogText(logFrame, "You made a new friend named " .. fName .. " " .. lName .. "!", Color3.fromRGB(100, 200, 255))
 					else
-						UIBuilder.AddLogText(logFrame, "You are now a " .. value .. "!", Color3.fromRGB(240, 200, 50))
+						GameLogic.Stats[stat] = value
+						if stat == "Stand" then
+							UIBuilder.AddLogText(logFrame, "You awakened a Stand: " .. value .. "!", Color3.fromRGB(150, 150, 255))
+						elseif stat == "Job" then
+							UIBuilder.AddLogText(logFrame, "You were hired as a " .. value .. ".", Color3.fromRGB(80, 220, 100))
+						else
+							UIBuilder.AddLogText(logFrame, "You are now a " .. value .. "!", Color3.fromRGB(240, 200, 50))
+						end
 					end
 				end
 			end
