@@ -1,5 +1,8 @@
 -- @ScriptType: ModuleScript
 local UIBuilder = {}
+local UIPopupMenu = require(script.Parent:WaitForChild("UIPopupMenu"))
+local UIRelationshipsMenu = require(script.Parent:WaitForChild("UIRelationshipsMenu"))
+local UIActionsMenu = require(script.Parent:WaitForChild("UIActionsMenu"))
 
 function UIBuilder.Build(player)
 	local bgGui = Instance.new("ScreenGui")
@@ -275,157 +278,31 @@ function UIBuilder.Build(player)
 	relBtnStroke.Thickness = 1
 	relBtnStroke.Parent = relButton
 
-	local popupOverlay = Instance.new("Frame")
-	popupOverlay.Name = "PopupOverlay"
-	popupOverlay.Size = UDim2.new(1, 0, 1, 0)
-	popupOverlay.Position = UDim2.new(0, 0, 0, 0)
-	popupOverlay.BackgroundColor3 = Color3.fromRGB(5, 5, 8)
-	popupOverlay.BackgroundTransparency = 0.6
-	popupOverlay.Visible = false
-	popupOverlay.Active = true
-	popupOverlay.Parent = mainFrame
+	local actButton = Instance.new("TextButton")
+	actButton.Name = "ActionsButton"
+	actButton.Size = UDim2.new(0.2, 0, 0.45, 0)
+	actButton.Position = UDim2.new(0.7, 0, 0.275, 0)
+	actButton.BackgroundColor3 = Color3.fromRGB(200, 100, 40)
+	actButton.TextColor3 = Color3.fromRGB(220, 220, 220)
+	actButton.Text = "ACTIONS"
+	actButton.Font = Enum.Font.GothamBold
+	actButton.TextScaled = true
+	actButton.BorderSizePixel = 0
+	actButton.Parent = actionFrame
 
-	local popupFrame = Instance.new("Frame")
-	popupFrame.Name = "PopupFrame"
-	popupFrame.Size = UDim2.new(0.9, 0, 0.85, 0)
-	popupFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-	popupFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-	popupFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
-	popupFrame.BorderSizePixel = 0
-	popupFrame.Parent = popupOverlay
+	local cornerActBtn = Instance.new("UICorner")
+	cornerActBtn.CornerRadius = UDim.new(0, 8)
+	cornerActBtn.Parent = actButton
 
-	local popupConstraint = Instance.new("UISizeConstraint")
-	popupConstraint.MaxSize = Vector2.new(600, 500)
-	popupConstraint.Parent = popupFrame
+	local actBtnStroke = Instance.new("UIStroke")
+	actBtnStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	actBtnStroke.Color = Color3.fromRGB(80, 50, 20)
+	actBtnStroke.Thickness = 1
+	actBtnStroke.Parent = actButton
 
-	local cornerPopup = Instance.new("UICorner")
-	cornerPopup.CornerRadius = UDim.new(0, 12)
-	cornerPopup.Parent = popupFrame
-
-	local popupStroke = Instance.new("UIStroke")
-	popupStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	popupStroke.Color = Color3.fromRGB(60, 60, 75)
-	popupStroke.Thickness = 2
-	popupStroke.Parent = popupFrame
-
-	local popupText = Instance.new("TextLabel")
-	popupText.Name = "PopupText"
-	popupText.Size = UDim2.new(1, -40, 0.35, 0)
-	popupText.Position = UDim2.new(0, 20, 0, 15)
-	popupText.BackgroundTransparency = 1
-	popupText.TextColor3 = Color3.fromRGB(240, 240, 240)
-	popupText.TextScaled = true
-	popupText.Font = Enum.Font.GothamBold
-	popupText.TextWrapped = true
-	popupText.Parent = popupFrame
-
-	local optionsFrame = Instance.new("ScrollingFrame")
-	optionsFrame.Name = "OptionsFrame"
-	optionsFrame.Size = UDim2.new(1, -40, 0.6, -20)
-	optionsFrame.Position = UDim2.new(0, 20, 0.4, 0)
-	optionsFrame.BackgroundTransparency = 1
-	optionsFrame.ScrollBarThickness = 4
-	optionsFrame.ScrollBarImageColor3 = Color3.fromRGB(80, 80, 95)
-	optionsFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-	optionsFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
-	optionsFrame.Parent = popupFrame
-
-	local uiPaddingOptions = Instance.new("UIPadding")
-	uiPaddingOptions.PaddingLeft = UDim.new(0, 4)
-	uiPaddingOptions.PaddingRight = UDim.new(0, 4)
-	uiPaddingOptions.PaddingTop = UDim.new(0, 4)
-	uiPaddingOptions.PaddingBottom = UDim.new(0, 4)
-	uiPaddingOptions.Parent = optionsFrame
-
-	local uiListLayoutOptions = Instance.new("UIListLayout")
-	uiListLayoutOptions.SortOrder = Enum.SortOrder.LayoutOrder
-	uiListLayoutOptions.FillDirection = Enum.FillDirection.Vertical
-	uiListLayoutOptions.Padding = UDim.new(0, 12)
-	uiListLayoutOptions.Parent = optionsFrame
-
-	local relOverlay = Instance.new("Frame")
-	relOverlay.Name = "RelationshipsOverlay"
-	relOverlay.Size = UDim2.new(1, 0, 1, 0)
-	relOverlay.Position = UDim2.new(0, 0, 0, 0)
-	relOverlay.BackgroundColor3 = Color3.fromRGB(5, 5, 8)
-	relOverlay.BackgroundTransparency = 0.6
-	relOverlay.Visible = false
-	relOverlay.Active = true
-	relOverlay.Parent = mainFrame
-
-	local relFrame = Instance.new("Frame")
-	relFrame.Name = "RelationshipsFrame"
-	relFrame.Size = UDim2.new(0.9, 0, 0.85, 0)
-	relFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-	relFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-	relFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
-	relFrame.BorderSizePixel = 0
-	relFrame.Parent = relOverlay
-
-	local relConstraint = Instance.new("UISizeConstraint")
-	relConstraint.MaxSize = Vector2.new(600, 500)
-	relConstraint.Parent = relFrame
-
-	local relCorner = Instance.new("UICorner")
-	relCorner.CornerRadius = UDim.new(0, 12)
-	relCorner.Parent = relFrame
-
-	local relStroke = Instance.new("UIStroke")
-	relStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	relStroke.Color = Color3.fromRGB(60, 60, 75)
-	relStroke.Thickness = 2
-	relStroke.Parent = relFrame
-
-	local relTitle = Instance.new("TextLabel")
-	relTitle.Name = "Title"
-	relTitle.Size = UDim2.new(1, -60, 0, 40)
-	relTitle.Position = UDim2.new(0, 20, 0, 10)
-	relTitle.BackgroundTransparency = 1
-	relTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-	relTitle.Text = "Relationships"
-	relTitle.Font = Enum.Font.GothamBlack
-	relTitle.TextSize = 24
-	relTitle.TextXAlignment = Enum.TextXAlignment.Left
-	relTitle.Parent = relFrame
-
-	local closeRelBtn = Instance.new("TextButton")
-	closeRelBtn.Name = "CloseButton"
-	closeRelBtn.Size = UDim2.new(0, 40, 0, 40)
-	closeRelBtn.Position = UDim2.new(1, -50, 0, 10)
-	closeRelBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 60)
-	closeRelBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	closeRelBtn.Text = "X"
-	closeRelBtn.Font = Enum.Font.GothamBold
-	closeRelBtn.TextSize = 20
-	closeRelBtn.Parent = relFrame
-
-	local closeRelCorner = Instance.new("UICorner")
-	closeRelCorner.CornerRadius = UDim.new(0, 8)
-	closeRelCorner.Parent = closeRelBtn
-
-	local relListFrame = Instance.new("ScrollingFrame")
-	relListFrame.Name = "ListFrame"
-	relListFrame.Size = UDim2.new(1, -40, 1, -70)
-	relListFrame.Position = UDim2.new(0, 20, 0, 60)
-	relListFrame.BackgroundTransparency = 1
-	relListFrame.ScrollBarThickness = 6
-	relListFrame.ScrollBarImageColor3 = Color3.fromRGB(80, 80, 95)
-	relListFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-	relListFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
-	relListFrame.Parent = relFrame
-
-	local uiPaddingRel = Instance.new("UIPadding")
-	uiPaddingRel.PaddingLeft = UDim.new(0, 4)
-	uiPaddingRel.PaddingRight = UDim.new(0, 4)
-	uiPaddingRel.PaddingTop = UDim.new(0, 4)
-	uiPaddingRel.PaddingBottom = UDim.new(0, 4)
-	uiPaddingRel.Parent = relListFrame
-
-	local uiListLayoutRel = Instance.new("UIListLayout")
-	uiListLayoutRel.SortOrder = Enum.SortOrder.LayoutOrder
-	uiListLayoutRel.FillDirection = Enum.FillDirection.Vertical
-	uiListLayoutRel.Padding = UDim.new(0, 10)
-	uiListLayoutRel.Parent = relListFrame
+	UIPopupMenu.Create(mainFrame)
+	UIRelationshipsMenu.Create(mainFrame)
+	UIActionsMenu.Create(mainFrame)
 
 	return gui
 end
@@ -494,61 +371,6 @@ function UIBuilder.CreateOptionButton(optionsFrame, text)
 	btnStroke.Parent = btn
 
 	return btn
-end
-
-function UIBuilder.UpdateRelationshipsMenu(listFrame, relationships)
-	for _, child in ipairs(listFrame:GetChildren()) do
-		if child:IsA("Frame") then
-			child:Destroy()
-		end
-	end
-
-	if not relationships or #relationships == 0 then
-		local emptyLabel = Instance.new("TextLabel")
-		emptyLabel.Size = UDim2.new(1, 0, 0, 40)
-		emptyLabel.BackgroundTransparency = 1
-		emptyLabel.TextColor3 = Color3.fromRGB(150, 150, 160)
-		emptyLabel.Text = "You have no relationships."
-		emptyLabel.Font = Enum.Font.GothamMedium
-		emptyLabel.TextSize = 18
-		emptyLabel.Parent = listFrame
-		return
-	end
-
-	for _, rel in ipairs(relationships) do
-		local entryFrame = Instance.new("Frame")
-		entryFrame.Size = UDim2.new(1, 0, 0, 50)
-		entryFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
-		entryFrame.BorderSizePixel = 0
-		entryFrame.Parent = listFrame
-
-		local entryCorner = Instance.new("UICorner")
-		entryCorner.CornerRadius = UDim.new(0, 6)
-		entryCorner.Parent = entryFrame
-
-		local entryStroke = Instance.new("UIStroke")
-		entryStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-		entryStroke.Color = Color3.fromRGB(50, 50, 60)
-		entryStroke.Thickness = 1
-		entryStroke.Parent = entryFrame
-
-		local textLabel = Instance.new("TextLabel")
-		textLabel.Size = UDim2.new(1, -20, 1, 0)
-		textLabel.Position = UDim2.new(0, 10, 0, 0)
-		textLabel.BackgroundTransparency = 1
-		textLabel.Font = Enum.Font.GothamMedium
-		textLabel.TextSize = 18
-		textLabel.TextXAlignment = Enum.TextXAlignment.Left
-		textLabel.Parent = entryFrame
-
-		if rel.IsDead then
-			textLabel.Text = rel.Role .. " - " .. rel.Name .. " (Deceased)"
-			textLabel.TextColor3 = Color3.fromRGB(120, 120, 130)
-		else
-			textLabel.Text = rel.Role .. " - " .. rel.Name .. " (Age: " .. rel.Age .. ")"
-			textLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
-		end
-	end
 end
 
 return UIBuilder
