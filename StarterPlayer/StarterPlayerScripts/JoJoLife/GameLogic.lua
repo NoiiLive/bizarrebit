@@ -176,9 +176,9 @@ function GameLogic.UpdateStatsUI(gui)
 	updateBar("Intelligence")
 end
 
-function GameLogic.PopulateRelationships(listFrame)
+function GameLogic.PopulateRelationships(listFrame, gui, logFrame, relOverlay)
 	for _, child in ipairs(listFrame:GetChildren()) do
-		if child:IsA("Frame") then
+		if child:IsA("TextButton") or child:IsA("Frame") then
 			child:Destroy()
 		end
 	end
@@ -191,13 +191,17 @@ function GameLogic.PopulateRelationships(listFrame)
 		layout.Parent = listFrame
 	end
 
+	local cardControllers = {}
+
 	for i, rel in ipairs(GameLogic.Stats.Relationships) do
 		if not rel.IsDead then
-			local item = Instance.new("Frame")
+			local item = Instance.new("TextButton")
 			item.Size = UDim2.new(1, 0, 0, 100)
 			item.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 			item.BorderSizePixel = 0
 			item.LayoutOrder = i
+			item.Text = ""
+			item.AutoButtonColor = false
 
 			local corner = Instance.new("UICorner")
 			corner.CornerRadius = UDim.new(0, 8)
@@ -250,6 +254,99 @@ function GameLogic.PopulateRelationships(listFrame)
 			barFill.Parent = barBg
 			Instance.new("UICorner", barFill).CornerRadius = UDim.new(0, 4)
 
+			local buttonContainer = Instance.new("Frame")
+			buttonContainer.Size = UDim2.new(1, -20, 0, 30)
+			buttonContainer.Position = UDim2.new(0, 10, 0, 100)
+			buttonContainer.BackgroundTransparency = 1
+			buttonContainer.Visible = false
+			buttonContainer.Parent = item
+
+			local btnLayout = Instance.new("UIListLayout")
+			btnLayout.FillDirection = Enum.FillDirection.Horizontal
+			btnLayout.SortOrder = Enum.SortOrder.LayoutOrder
+			btnLayout.Padding = UDim.new(0, 10)
+			btnLayout.Parent = buttonContainer
+
+			local function createActionBtn(text, order)
+				local b = Instance.new("TextButton")
+				b.Size = UDim2.new(0, 90, 1, 0)
+				b.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+				b.Text = text
+				b.TextColor3 = Color3.fromRGB(255, 255, 255)
+				b.Font = Enum.Font.Gotham
+				b.TextSize = 13
+				b.LayoutOrder = order
+				Instance.new("UICorner", b).CornerRadius = UDim.new(0, 4)
+				b.Parent = buttonContainer
+				return b
+			end
+
+			local talkBtn = createActionBtn("Talk", 1)
+			local timeBtn = createActionBtn("Spend Time", 2)
+			local compBtn = createActionBtn("Compliment", 3)
+
+			local isExpanded = false
+
+			local cardController = {
+				Collapse = function()
+					isExpanded = false
+					item.Size = UDim2.new(1, 0, 0, 100)
+					buttonContainer.Visible = false
+				end
+			}
+			table.insert(cardControllers, cardController)
+
+			item.MouseButton1Click:Connect(function()
+				if isExpanded then
+					cardController.Collapse()
+				else
+					for _, ctrl in ipairs(cardControllers) do ctrl.Collapse() end
+					isExpanded = true
+					item.Size = UDim2.new(1, 0, 0, 140)
+					buttonContainer.Visible = true
+				end
+			end)
+
+			local function doInteraction(actionName)
+				relOverlay.Visible = false
+				GameLogic.Stats.EventTarget = rel
+
+				local encounter = {}
+
+				if actionName == "Talk" then
+					encounter = {
+						Text = "You sit down to have a conversation with your " .. string.lower(rel.Role) .. ", " .. rel.Name .. ".",
+						Options = {
+							{Text="Discuss your day", Outcomes={{Weight=10, ResultText="You had a pleasant chat about recent events.", StatChanges={Closeness=3, Happiness=2}}}},
+							{Text="Ask for advice", Outcomes={{Weight=8, ResultText="They gave you some solid life advice.", StatChanges={Closeness=5, Intelligence=2}}, {Weight=2, ResultText="They completely misunderstood your problem and gave bad advice.", StatChanges={Closeness=-2, Happiness=-3}}}}
+						}
+					}
+				elseif actionName == "Spend Time" then
+					encounter = {
+						Text = "You ask your " .. string.lower(rel.Role) .. ", " .. rel.Name .. ", if they want to spend some time together.",
+						Options = {
+							{Text="Watch a movie", Outcomes={{Weight=10, ResultText="You watched a bizarre action movie together. It was fun!", StatChanges={Closeness=8, Happiness=5}}}},
+							{Text="Go out to eat ($15)", IsAvailable=function(s) return s.Money>=15 end, Outcomes={{Weight=10, ResultText="You bought them lunch and bonded over a good meal.", StatChanges={Closeness=12, Happiness=10, Money=-15}}}},
+							{Text="Go for a walk", Outcomes={{Weight=8, ResultText="You enjoyed a nice walk around town together.", StatChanges={Closeness=6, Body=2}}, {Weight=2, ResultText="It started raining unexpectedly and ruined the mood.", StatChanges={Closeness=-2, Happiness=-5}}}}
+						}
+					}
+				elseif actionName == "Compliment" then
+					encounter = {
+						Text = "You walk up to your " .. string.lower(rel.Role) .. ", " .. rel.Name .. ", to give them a compliment.",
+						Options = {
+							{Text="Praise their outfit", Outcomes={{Weight=8, ResultText="They smiled broadly and thanked you.", StatChanges={Closeness=5, Happiness=2}}, {Weight=2, ResultText="They thought you were being sarcastic and rolled their eyes.", StatChanges={Closeness=-3, Happiness=-2}}}},
+							{Text="Compliment their personality", Outcomes={{Weight=10, ResultText="They seemed genuinely touched by your kind words.", StatChanges={Closeness=8, Happiness=4}}}}
+						}
+					}
+				end
+
+				GameLogic.ShowPopup(gui, logFrame, encounter)
+			end
+
+			talkBtn.MouseButton1Click:Connect(function() doInteraction("Talk") end)
+			timeBtn.MouseButton1Click:Connect(function() doInteraction("Spend Time") end)
+			compBtn.MouseButton1Click:Connect(function() doInteraction("Compliment") end)
+
 			item.Parent = listFrame
 		end
 	end
@@ -288,7 +385,7 @@ function GameLogic.Start(player)
 		local popupOverlay = mainFrame:WaitForChild("PopupOverlay")
 		if popupOverlay.Visible then return end
 
-		GameLogic.PopulateRelationships(relListFrame)
+		GameLogic.PopulateRelationships(relListFrame, gui, logFrame, relOverlay)
 		relOverlay.Visible = true
 	end)
 
@@ -339,6 +436,7 @@ function GameLogic.AgeUp(gui, logFrame)
 		for _, rel in ipairs(GameLogic.Stats.Relationships) do
 			if not rel.IsDead then
 				rel.Age = rel.Age + 1
+				rel.Closeness = math.clamp(rel.Closeness - math.random(3, 6), 0, 100)
 
 				if rel.Role == "Mother" then
 					mother = rel
