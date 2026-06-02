@@ -133,5 +133,77 @@ return {
 			{Text="Pedal as hard as you can", Outcomes={{Weight=function(s) return s.Strength end, ResultText="You caught your balance and rode all the way down the street!", StatChanges={Happiness=8, Strength=4}}, {Weight=function(s) return 100-s.Strength+20 end, ResultText="You completely lost control and crashed into a mailbox.", StatChanges={LifeForce=-10, Happiness=-6}}}},
 			{Text="Refuse to let go", Outcomes={{Weight=10, ResultText="You stayed safe, but didn't learn anything new today.", StatChanges={Happiness=-3}}}}
 		}
+	},
+	{
+		ID="Child_Blocks", MinAge=1, MaxAge=3, MinYear=0, MaxYear=9999,
+		Text="You are given a set of colorful wooden building blocks.",
+		Options={
+			{Text="Build a tall tower", Outcomes={{Weight=8, ResultText="You carefully stacked them up. You feel a bit smarter.", StatChanges={Intelligence=3, Happiness=4}}, {Weight=2, ResultText="The tower fell and hit your head.", StatChanges={Happiness=-3, LifeForce=-2}}}},
+			{Text="Eat them", Outcomes={{Weight=10, ResultText="They taste like splinters and regret.", StatChanges={Body=-4, Happiness=-5}}}}
+		}
+	},
+	{
+		ID="Child_GroceryLost", MinAge=4, MaxAge=9, MinYear=1950, MaxYear=9999,
+		Text="You lost sight of your parents in the massive grocery store.",
+		Options={
+			{Text="Cry loudly", Outcomes={{Weight=10, ResultText="A friendly employee found you and brought you to your parents.", StatChanges={Happiness=3}}}},
+			{Text="Wander the aisles alone", Outcomes={{Weight=4, ResultText="You found the candy aisle and snuck a chocolate bar!", StatChanges={Happiness=8, Body=-2}}, {Weight=6, ResultText="You knocked over a display of cans in a panic.", StatChanges={Happiness=-8, LifeForce=-2}}}}
+		}
+	},
+	{
+		ID="Child_HoopStick", MinAge=5, MaxAge=12, MinYear=1860, MaxYear=1915,
+		Text="Your friends are rolling a wooden hoop down the cobblestone street with a stick.",
+		Options={
+			{Text="Join the game", Outcomes={{Weight=8, ResultText="You ran around for hours and had a blast.", StatChanges={Happiness=8, Strength=3}}, {Weight=2, ResultText="The hoop bounced and hit your shin.", StatChanges={Happiness=-2, LifeForce=-3}}}},
+			{Text="Say it's boring", Outcomes={{Weight=10, ResultText="You sat on the curb and thought about more complex mechanics.", StatChanges={Intelligence=4, Happiness=-2}}}}
+		}
+	},
+	{
+		ID="Child_VirtualPet", MinAge=6, MaxAge=12, MinYear=1996, MaxYear=2005,
+		Text="Everyone at school has a new digital pocket pet that beeps constantly.",
+		Options={
+			{Text="Beg parents for one", Outcomes={{Weight=5, ResultText="They bought you one! You have a new digital friend.", StatChanges={Happiness=10, Intelligence=2}}, {Weight=5, ResultText="They said no. You feel completely left out.", StatChanges={Happiness=-8}}}},
+			{Text="Ignore the trend", Outcomes={{Weight=10, ResultText="You focused on real hobbies instead.", StatChanges={Intelligence=5, Happiness=2}}}}
+		}
+	},
+	{
+		ID="Child_Broccoli", MinAge=2, MaxAge=4, MinYear=0, MaxYear=9999,
+		Text="There are green, tree-looking things on your dinner plate.",
+		Options={
+			{Text="Eat them bravely", Outcomes={{Weight=10, ResultText="They weren't that bad! Your body feels stronger.", StatChanges={Body=5, Strength=2, Happiness=2}}}},
+			{Text="Throw them on the floor", Outcomes={{Weight=10, ResultText="Your parents yelled at you and sent you to bed early.", StatChanges={Happiness=-10}}}}
+		}
+	},
+	{
+		ID="Child_Puddles", MinAge=4, MaxAge=10, MinYear=0, MaxYear=9999,
+		Text="It just stopped raining, and there are massive mud puddles everywhere.",
+		Options={
+			{Text="Jump in!", Outcomes={{Weight=8, ResultText="SPLASH! You had so much fun getting dirty.", StatChanges={Happiness=8, Body=-2}}, {Weight=2, ResultText="You slipped and completely covered yourself in mud.", StatChanges={Happiness=-4, LifeForce=-2}}}},
+			{Text="Walk around carefully", Outcomes={{Weight=10, ResultText="You kept your shoes clean. A very sensible choice.", StatChanges={Intelligence=3}}}}
+		}
+	},
+	{
+		ID="Child_Radio", MinAge=6, MaxAge=12, MinYear=1920, MaxYear=1945,
+		Text="Your family gathers around the large wooden radio to listen to an evening broadcast.",
+		Options={
+			{Text="Listen intently", Outcomes={{Weight=10, ResultText="The dramatic voice acting sparked your imagination.", StatChanges={Intelligence=5, Happiness=6}}}},
+			{Text="Fall asleep", Outcomes={{Weight=10, ResultText="The static hum lulled you into a deep sleep.", StatChanges={Body=4, Happiness=2}}}}
+		}
+	},
+	{
+		ID="Child_Butterfly", MinAge=4, MaxAge=9, MinYear=0, MaxYear=9999,
+		Text="A beautiful, large butterfly lands directly on your nose.",
+		Options={
+			{Text="Stay perfectly still", Outcomes={{Weight=8, ResultText="It sat there for a moment before gracefully fluttering away. Magical.", StatChanges={Happiness=10, Intelligence=2}}, {Weight=2, ResultText="You sneezed and it flew away.", StatChanges={Happiness=-2}}}},
+			{Text="Try to catch it", Outcomes={{Weight=10, ResultText="You completely missed and smacked yourself in the face.", StatChanges={LifeForce=-2, Happiness=-5}}}}
+		}
+	},
+	{
+		ID="Child_VHS", MinAge=7, MaxAge=12, MinYear=1980, MaxYear=1995,
+		Text="It's Friday night! Time to pick out a VHS tape at the local video rental store.",
+		Options={
+			{Text="Pick an action movie", Outcomes={{Weight=10, ResultText="You watched beefy men blow things up. It was awesome.", StatChanges={Happiness=8, Strength=2}}}},
+			{Text="Pick an educational tape", Outcomes={{Weight=10, ResultText="You learned about the solar system, but it was a bit dry.", StatChanges={Intelligence=6, Happiness=-2}}}}
+		}
 	}
 }
