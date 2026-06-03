@@ -300,6 +300,73 @@ function UIBuilder.Build(player)
 	actBtnStroke.Thickness = 1
 	actBtnStroke.Parent = actButton
 
+	-- INPUT OVERLAY FOR NAMING CHILDREN --
+	local inputOverlay = Instance.new("Frame")
+	inputOverlay.Name = "InputOverlay"
+	inputOverlay.Size = UDim2.new(1, 0, 1, 0)
+	inputOverlay.BackgroundColor3 = Color3.fromRGB(5, 5, 8)
+	inputOverlay.BackgroundTransparency = 0.6
+	inputOverlay.Visible = false
+	inputOverlay.Active = true
+	inputOverlay.ZIndex = 20
+	inputOverlay.Parent = mainFrame
+
+	local inputFrame = Instance.new("Frame")
+	inputFrame.Name = "InputFrame"
+	inputFrame.Size = UDim2.new(0.85, 0, 0.35, 0)
+	inputFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+	inputFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+	inputFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+	inputFrame.BorderSizePixel = 0
+	inputFrame.ZIndex = 21
+	inputFrame.Parent = inputOverlay
+	Instance.new("UICorner", inputFrame).CornerRadius = UDim.new(0, 12)
+	Instance.new("UISizeConstraint", inputFrame).MaxSize = Vector2.new(500, 250)
+
+	local inputStroke = Instance.new("UIStroke", inputFrame)
+	inputStroke.Color = Color3.fromRGB(60, 60, 75)
+	inputStroke.Thickness = 2
+
+	local inputTitle = Instance.new("TextLabel")
+	inputTitle.Name = "Title"
+	inputTitle.Size = UDim2.new(1, -40, 0, 60)
+	inputTitle.Position = UDim2.new(0, 20, 0, 10)
+	inputTitle.BackgroundTransparency = 1
+	inputTitle.TextColor3 = Color3.fromRGB(240, 240, 240)
+	inputTitle.TextScaled = true
+	inputTitle.Font = Enum.Font.GothamBold
+	inputTitle.TextWrapped = true
+	inputTitle.ZIndex = 22
+	inputTitle.Parent = inputFrame
+
+	local inputBox = Instance.new("TextBox")
+	inputBox.Name = "InputBox"
+	inputBox.Size = UDim2.new(1, -60, 0, 45)
+	inputBox.Position = UDim2.new(0, 30, 0, 80)
+	inputBox.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
+	inputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+	inputBox.Font = Enum.Font.GothamMedium
+	inputBox.TextSize = 20
+	inputBox.ZIndex = 22
+	inputBox.Parent = inputFrame
+	Instance.new("UICorner", inputBox).CornerRadius = UDim.new(0, 6)
+	local boxStroke = Instance.new("UIStroke", inputBox)
+	boxStroke.Color = Color3.fromRGB(100, 100, 120)
+	boxStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+	local confirmBtn = Instance.new("TextButton")
+	confirmBtn.Name = "ConfirmButton"
+	confirmBtn.Size = UDim2.new(0.5, 0, 0, 45)
+	confirmBtn.Position = UDim2.new(0.25, 0, 1, -60)
+	confirmBtn.BackgroundColor3 = Color3.fromRGB(80, 160, 80)
+	confirmBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	confirmBtn.Text = "CONFIRM"
+	confirmBtn.Font = Enum.Font.GothamBlack
+	confirmBtn.TextSize = 18
+	confirmBtn.ZIndex = 22
+	confirmBtn.Parent = inputFrame
+	Instance.new("UICorner", confirmBtn).CornerRadius = UDim.new(0, 8)
+
 	UIPopupMenu.Create(mainFrame)
 	UIRelationshipsMenu.Create(mainFrame)
 	UIActionsMenu.Create(mainFrame)
