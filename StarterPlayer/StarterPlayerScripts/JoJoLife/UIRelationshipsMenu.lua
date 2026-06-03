@@ -62,10 +62,42 @@ function UIRelationshipsMenu.Create(mainFrame)
 	closeRelCorner.CornerRadius = UDim.new(0, 8)
 	closeRelCorner.Parent = closeRelBtn
 
+	local tabFrame = Instance.new("Frame")
+	tabFrame.Name = "TabFrame"
+	tabFrame.Size = UDim2.new(1, -40, 0, 40)
+	tabFrame.Position = UDim2.new(0, 20, 0, 60)
+	tabFrame.BackgroundTransparency = 1
+	tabFrame.Parent = relFrame
+
+	local tabLayout = Instance.new("UIListLayout")
+	tabLayout.FillDirection = Enum.FillDirection.Horizontal
+	tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	tabLayout.Padding = UDim.new(0, 10)
+	tabLayout.Parent = tabFrame
+
+	local function createTabBtn(name, order)
+		local btn = Instance.new("TextButton")
+		btn.Name = name .. "Button"
+		btn.Size = UDim2.new(0.3, 0, 1, 0)
+		btn.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+		btn.TextColor3 = Color3.fromRGB(220, 220, 220)
+		btn.Text = name
+		btn.Font = Enum.Font.GothamBold
+		btn.TextSize = 14
+		btn.LayoutOrder = order
+		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+		btn.Parent = tabFrame
+		return btn
+	end
+
+	createTabBtn("Relatives", 1)
+	createTabBtn("Friends", 2)
+	createTabBtn("Family", 3)
+
 	local relListFrame = Instance.new("ScrollingFrame")
 	relListFrame.Name = "ListFrame"
-	relListFrame.Size = UDim2.new(1, -40, 1, -70)
-	relListFrame.Position = UDim2.new(0, 20, 0, 60)
+	relListFrame.Size = UDim2.new(1, -40, 1, -120)
+	relListFrame.Position = UDim2.new(0, 20, 0, 110)
 	relListFrame.BackgroundTransparency = 1
 	relListFrame.ScrollBarThickness = 6
 	relListFrame.ScrollBarImageColor3 = Color3.fromRGB(80, 80, 95)
