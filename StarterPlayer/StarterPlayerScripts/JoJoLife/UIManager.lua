@@ -116,7 +116,9 @@ function UIManager.PopulateActions(listFrame, gui, logFrame, actOverlay, GameLog
 	end
 end
 
-function UIManager.PopulateRelationships(listFrame, gui, logFrame, relOverlay, GameLogic, StatsManager)
+function UIManager.PopulateRelationships(listFrame, gui, logFrame, relOverlay, GameLogic, StatsManager, activeTab)
+	activeTab = activeTab or "Relatives"
+
 	for _, child in ipairs(listFrame:GetChildren()) do
 		if child:IsA("TextButton") or child:IsA("Frame") then
 			child:Destroy()
@@ -124,137 +126,242 @@ function UIManager.PopulateRelationships(listFrame, gui, logFrame, relOverlay, G
 	end
 
 	local cardControllers = {}
+	local validLayoutOrder = 1
 
-	for i, rel in ipairs(StatsManager.Stats.Relationships) do
+	for _, rel in ipairs(StatsManager.Stats.Relationships) do
 		if not rel.IsDead then
-			local item = Instance.new("TextButton")
-			item.Size = UDim2.new(1, 0, 0, 100)
-			item.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-			item.BorderSizePixel = 0
-			item.LayoutOrder = i
-			item.Text = ""
-			item.AutoButtonColor = false
-
-			local corner = Instance.new("UICorner")
-			corner.CornerRadius = UDim.new(0, 8)
-			corner.Parent = item
-
-			local nameLabel = Instance.new("TextLabel")
-			nameLabel.Size = UDim2.new(1, -20, 0, 30)
-			nameLabel.Position = UDim2.new(0, 10, 0, 5)
-			nameLabel.BackgroundTransparency = 1
-			nameLabel.Text = rel.Name .. " (" .. rel.Role .. ")"
-			nameLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
-			nameLabel.TextSize = 20
-			nameLabel.Font = Enum.Font.GothamBold
-			nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-			nameLabel.Parent = item
-
-			local infoLabel = Instance.new("TextLabel")
-			infoLabel.Size = UDim2.new(1, -20, 0, 20)
-			infoLabel.Position = UDim2.new(0, 10, 0, 35)
-			infoLabel.BackgroundTransparency = 1
-			infoLabel.Text = "Age: " .. rel.Age .. " | Gender: " .. rel.Gender .. " | Race: " .. rel.Race .. " | Stand: " .. rel.Stand
-			infoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-			infoLabel.TextSize = 14
-			infoLabel.Font = Enum.Font.Gotham
-			infoLabel.TextXAlignment = Enum.TextXAlignment.Left
-			infoLabel.Parent = item
-
-			local closeTitle = Instance.new("TextLabel")
-			closeTitle.Size = UDim2.new(0, 100, 0, 20)
-			closeTitle.Position = UDim2.new(0, 10, 0, 65)
-			closeTitle.BackgroundTransparency = 1
-			closeTitle.Text = "Closeness:"
-			closeTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-			closeTitle.TextSize = 14
-			closeTitle.Font = Enum.Font.GothamBold
-			closeTitle.TextXAlignment = Enum.TextXAlignment.Left
-			closeTitle.Parent = item
-
-			local barBg = Instance.new("Frame")
-			barBg.Size = UDim2.new(1, -120, 0, 16)
-			barBg.Position = UDim2.new(0, 110, 0, 67)
-			barBg.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-			barBg.Parent = item
-			Instance.new("UICorner", barBg).CornerRadius = UDim.new(0, 4)
-
-			local barFill = Instance.new("Frame")
-			local pct = math.clamp(rel.Closeness / 100, 0, 1)
-			barFill.Size = UDim2.new(pct, 0, 1, 0)
-			barFill.BackgroundColor3 = Color3.fromRGB(80, 220, 100)
-			barFill.Parent = barBg
-			Instance.new("UICorner", barFill).CornerRadius = UDim.new(0, 4)
-
-			local buttonContainer = Instance.new("Frame")
-			buttonContainer.Size = UDim2.new(1, -20, 0, 30)
-			buttonContainer.Position = UDim2.new(0, 10, 0, 100)
-			buttonContainer.BackgroundTransparency = 1
-			buttonContainer.Visible = false
-			buttonContainer.Parent = item
-
-			local btnLayout = Instance.new("UIListLayout")
-			btnLayout.FillDirection = Enum.FillDirection.Horizontal
-			btnLayout.SortOrder = Enum.SortOrder.LayoutOrder
-			btnLayout.Padding = UDim.new(0, 10)
-			btnLayout.Parent = buttonContainer
-
-			local function createActionBtn(text, order)
-				local b = Instance.new("TextButton")
-				b.Size = UDim2.new(0, 90, 1, 0)
-				b.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-				b.Text = text
-				b.TextColor3 = Color3.fromRGB(255, 255, 255)
-				b.Font = Enum.Font.Gotham
-				b.TextSize = 13
-				b.LayoutOrder = order
-				Instance.new("UICorner", b).CornerRadius = UDim.new(0, 4)
-				b.Parent = buttonContainer
-				return b
+			local isMatch = false
+			if activeTab == "Relatives" and (rel.Role == "Father" or rel.Role == "Mother" or rel.Role == "Brother" or rel.Role == "Sister") then
+				isMatch = true
+			elseif activeTab == "Family" and (rel.Role == "Spouse" or rel.Role == "Son" or rel.Role == "Daughter") then
+				isMatch = true
+			elseif activeTab == "Friends" and (rel.Role == "Friend" or rel.Role == "Partner") then
+				isMatch = true
 			end
 
-			local talkBtn = createActionBtn("Talk", 1)
-			local timeBtn = createActionBtn("Spend Time", 2)
-			local compBtn = createActionBtn("Compliment", 3)
+			if isMatch then
+				local item = Instance.new("TextButton")
+				item.Size = UDim2.new(1, 0, 0, 100)
+				item.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+				item.BorderSizePixel = 0
+				item.LayoutOrder = validLayoutOrder
+				item.Text = ""
+				item.AutoButtonColor = false
+				validLayoutOrder = validLayoutOrder + 1
 
-			local isExpanded = false
+				local corner = Instance.new("UICorner")
+				corner.CornerRadius = UDim.new(0, 8)
+				corner.Parent = item
 
-			local cardController = {
-				Collapse = function()
-					isExpanded = false
-					item.Size = UDim2.new(1, 0, 0, 100)
-					buttonContainer.Visible = false
+				local nameLabel = Instance.new("TextLabel")
+				nameLabel.Size = UDim2.new(1, -20, 0, 30)
+				nameLabel.Position = UDim2.new(0, 10, 0, 5)
+				nameLabel.BackgroundTransparency = 1
+				nameLabel.Text = rel.Name .. " (" .. rel.Role .. ")"
+				nameLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+				nameLabel.TextSize = 20
+				nameLabel.Font = Enum.Font.GothamBold
+				nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+				nameLabel.Parent = item
+
+				local infoLabel = Instance.new("TextLabel")
+				infoLabel.Size = UDim2.new(1, -20, 0, 20)
+				infoLabel.Position = UDim2.new(0, 10, 0, 35)
+				infoLabel.BackgroundTransparency = 1
+				infoLabel.Text = "Age: " .. rel.Age .. " | Gender: " .. rel.Gender .. " | Race: " .. rel.Race .. " | Stand: " .. rel.Stand
+				infoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+				infoLabel.TextSize = 14
+				infoLabel.Font = Enum.Font.Gotham
+				infoLabel.TextXAlignment = Enum.TextXAlignment.Left
+				infoLabel.Parent = item
+
+				local closeTitle = Instance.new("TextLabel")
+				closeTitle.Size = UDim2.new(0, 100, 0, 20)
+				closeTitle.Position = UDim2.new(0, 10, 0, 65)
+				closeTitle.BackgroundTransparency = 1
+				closeTitle.Text = "Closeness:"
+				closeTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+				closeTitle.TextSize = 14
+				closeTitle.Font = Enum.Font.GothamBold
+				closeTitle.TextXAlignment = Enum.TextXAlignment.Left
+				closeTitle.Parent = item
+
+				local barBg = Instance.new("Frame")
+				barBg.Size = UDim2.new(1, -120, 0, 16)
+				barBg.Position = UDim2.new(0, 110, 0, 67)
+				barBg.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+				barBg.Parent = item
+				Instance.new("UICorner", barBg).CornerRadius = UDim.new(0, 4)
+
+				local barFill = Instance.new("Frame")
+				local pct = math.clamp(rel.Closeness / 100, 0, 1)
+				barFill.Size = UDim2.new(pct, 0, 1, 0)
+				barFill.BackgroundColor3 = Color3.fromRGB(80, 220, 100)
+				barFill.Parent = barBg
+				Instance.new("UICorner", barFill).CornerRadius = UDim.new(0, 4)
+
+				local buttonContainer = Instance.new("Frame")
+				buttonContainer.Size = UDim2.new(1, -20, 0, 30)
+				buttonContainer.Position = UDim2.new(0, 10, 0, 100)
+				buttonContainer.BackgroundTransparency = 1
+				buttonContainer.Visible = false
+				buttonContainer.Parent = item
+
+				local btnLayout = Instance.new("UIListLayout")
+				btnLayout.FillDirection = Enum.FillDirection.Horizontal
+				btnLayout.SortOrder = Enum.SortOrder.LayoutOrder
+				btnLayout.Padding = UDim.new(0, 10)
+				btnLayout.Parent = buttonContainer
+
+				local function createActionBtn(text, order)
+					local b = Instance.new("TextButton")
+					b.Size = UDim2.new(0, 90, 1, 0)
+					b.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+					b.Text = text
+					b.TextColor3 = Color3.fromRGB(255, 255, 255)
+					b.Font = Enum.Font.Gotham
+					b.TextSize = 13
+					b.LayoutOrder = order
+					Instance.new("UICorner", b).CornerRadius = UDim.new(0, 4)
+					b.Parent = buttonContainer
+					return b
 				end
-			}
-			table.insert(cardControllers, cardController)
 
-			item.MouseButton1Click:Connect(function()
-				if isExpanded then
-					cardController.Collapse()
+				local talkBtn = createActionBtn("Talk", 1)
+				local timeBtn = createActionBtn("Spend Time", 2)
+
+				if rel.Role == "Friend" then
+					local askOutBtn = createActionBtn("Ask Out", 3)
+					askOutBtn.MouseButton1Click:Connect(function()
+						rel.Role = "Partner"
+						relOverlay.Visible = false
+						UIBuilder.AddLogText(logFrame, "You asked out " .. rel.Name .. " and they said yes!", Color3.fromRGB(255, 150, 150))
+					end)
+				elseif rel.Role == "Partner" then
+					local marryBtn = createActionBtn("Marry", 3)
+					marryBtn.MouseButton1Click:Connect(function()
+						if StatsManager.Stats.Age >= 18 and rel.Age >= 18 then
+							relOverlay.Visible = false
+							GameLogic.TriggerMarriage(gui, logFrame, rel)
+						else
+							relOverlay.Visible = false
+							UIBuilder.AddLogText(logFrame, "You or your partner are too young to get married!", Color3.fromRGB(200, 100, 100))
+						end
+					end)
+					local breakBtn = createActionBtn("Break Up", 4)
+					breakBtn.MouseButton1Click:Connect(function()
+						rel.Role = "Friend"
+						rel.Closeness = 10
+						relOverlay.Visible = false
+						UIBuilder.AddLogText(logFrame, "You broke up with " .. rel.Name .. ".", Color3.fromRGB(200, 100, 100))
+					end)
+				elseif rel.Role == "Spouse" then
+					local isSameSex = (StatsManager.Stats.Gender == rel.Gender)
+					local childBtnText = isSameSex and "Adopt Child" or "Have Child"
+
+					local childBtn = createActionBtn(childBtnText, 3)
+					childBtn.MouseButton1Click:Connect(function()
+						relOverlay.Visible = false
+
+						if StatsManager.Stats.Age >= 18 and rel.Age >= 18 then
+							local successChance = isSameSex and 50 or 70
+
+							if math.random(1, 100) <= successChance then
+								local sibGender = math.random() > 0.5 and "Male" or "Female"
+								local sibNamePool = sibGender == "Male" and StatsManager.FirstNames.Male or StatsManager.FirstNames.Female
+								local defaultName = sibNamePool[math.random(1, #sibNamePool)]
+
+								local promptText = isSameSex and ("You are adopting a " .. string.lower(sibGender) .. "! What will you name them?") or ("You had a " .. string.lower(sibGender) .. "! What will you name them?")
+
+								GameLogic.ShowInputPopup(gui, promptText, defaultName, function(chosenName)
+									local childRole = sibGender == "Male" and "Son" or "Daughter"
+									table.insert(StatsManager.Stats.Relationships, {
+										Name = chosenName .. " " .. StatsManager.Stats.LastName,
+										Role = childRole,
+										Age = 0,
+										Race = StatsManager.Stats.Race,
+										LifespanRoll = 0.8 + (math.random() * 0.2),
+										IsDead = false,
+										Gender = sibGender,
+										Stand = "None",
+										Closeness = 80
+									})
+									local verb = isSameSex and "adopted" or "had"
+									UIBuilder.AddLogText(logFrame, "You and " .. rel.Name .. " " .. verb .. " a baby! You named them " .. chosenName .. ".", Color3.fromRGB(255, 200, 255))
+									UIManager.PopulateRelationships(listFrame, gui, logFrame, relOverlay, GameLogic, StatsManager, "Family")
+								end)
+							else
+								local verb = isSameSex and "adopt a baby" or "try for a baby"
+								UIBuilder.AddLogText(logFrame, "You and " .. rel.Name .. " tried to " .. verb .. ", but were unsuccessful this time.", Color3.fromRGB(200, 150, 150))
+							end
+						else
+							UIBuilder.AddLogText(logFrame, "Both you and your spouse must be at least 18 to have/adopt a child.", Color3.fromRGB(200, 100, 100))
+						end
+					end)
+
+					local divorceBtn = createActionBtn("Divorce", 4)
+					divorceBtn.MouseButton1Click:Connect(function()
+						rel.Role = "Friend"
+						rel.Closeness = 0
+						StatsManager.Stats.Money = math.floor(StatsManager.Stats.Money / 2)
+						relOverlay.Visible = false
+						UIBuilder.AddLogText(logFrame, "You divorced " .. rel.Name .. ". They took half your money.", Color3.fromRGB(200, 100, 100))
+					end)
 				else
-					for _, ctrl in ipairs(cardControllers) do ctrl.Collapse() end
-					isExpanded = true
-					item.Size = UDim2.new(1, 0, 0, 140)
-					buttonContainer.Visible = true
+					local compBtn = createActionBtn("Compliment", 3)
+					compBtn.MouseButton1Click:Connect(function()
+						relOverlay.Visible = false
+						StatsManager.Stats.EventTarget = rel
+						local encounter = {
+							Text = "You walk up to your " .. string.lower(rel.Role) .. ", " .. rel.Name .. ", to give them a compliment.",
+							Options = {
+								{Text="Praise their outfit", Outcomes={{Weight=8, ResultText="They smiled broadly and thanked you.", StatChanges={Closeness=5, Happiness=2}}, {Weight=2, ResultText="They thought you were being sarcastic and rolled their eyes.", StatChanges={Closeness=-3, Happiness=-2}}}},
+								{Text="Compliment their personality", Outcomes={{Weight=10, ResultText="They seemed genuinely touched by your kind words.", StatChanges={Closeness=8, Happiness=4}}}}
+							}
+						}
+						GameLogic.ShowPopup(gui, logFrame, encounter)
+					end)
 				end
-			end)
 
-			local function doInteraction(actionName)
-				relOverlay.Visible = false
-				StatsManager.Stats.EventTarget = rel
+				local isExpanded = false
 
-				local encounter = {}
+				local cardController = {
+					Collapse = function()
+						isExpanded = false
+						item.Size = UDim2.new(1, 0, 0, 100)
+						buttonContainer.Visible = false
+					end
+				}
+				table.insert(cardControllers, cardController)
 
-				if actionName == "Talk" then
-					encounter = {
+				item.MouseButton1Click:Connect(function()
+					if isExpanded then
+						cardController.Collapse()
+					else
+						for _, ctrl in ipairs(cardControllers) do ctrl.Collapse() end
+						isExpanded = true
+						item.Size = UDim2.new(1, 0, 0, 140)
+						buttonContainer.Visible = true
+					end
+				end)
+
+				talkBtn.MouseButton1Click:Connect(function()
+					relOverlay.Visible = false
+					StatsManager.Stats.EventTarget = rel
+					local encounter = {
 						Text = "You sit down to have a conversation with your " .. string.lower(rel.Role) .. ", " .. rel.Name .. ".",
 						Options = {
 							{Text="Discuss your day", Outcomes={{Weight=10, ResultText="You had a pleasant chat about recent events.", StatChanges={Closeness=3, Happiness=2}}}},
 							{Text="Ask for advice", Outcomes={{Weight=8, ResultText="They gave you some solid life advice.", StatChanges={Closeness=5, Intelligence=2}}, {Weight=2, ResultText="They completely misunderstood your problem and gave bad advice.", StatChanges={Closeness=-2, Happiness=-3}}}}
 						}
 					}
-				elseif actionName == "Spend Time" then
-					encounter = {
+					GameLogic.ShowPopup(gui, logFrame, encounter)
+				end)
+
+				timeBtn.MouseButton1Click:Connect(function()
+					relOverlay.Visible = false
+					StatsManager.Stats.EventTarget = rel
+					local encounter = {
 						Text = "You ask your " .. string.lower(rel.Role) .. ", " .. rel.Name .. ", if they want to spend some time together.",
 						Options = {
 							{Text="Watch a movie", Outcomes={{Weight=10, ResultText="You watched a bizarre action movie together. It was fun!", StatChanges={Closeness=8, Happiness=5}}}},
@@ -262,24 +369,11 @@ function UIManager.PopulateRelationships(listFrame, gui, logFrame, relOverlay, G
 							{Text="Go for a walk", Outcomes={{Weight=8, ResultText="You enjoyed a nice walk around town together.", StatChanges={Closeness=6, Body=2}}, {Weight=2, ResultText="It started raining unexpectedly and ruined the mood.", StatChanges={Closeness=-2, Happiness=-5}}}}
 						}
 					}
-				elseif actionName == "Compliment" then
-					encounter = {
-						Text = "You walk up to your " .. string.lower(rel.Role) .. ", " .. rel.Name .. ", to give them a compliment.",
-						Options = {
-							{Text="Praise their outfit", Outcomes={{Weight=8, ResultText="They smiled broadly and thanked you.", StatChanges={Closeness=5, Happiness=2}}, {Weight=2, ResultText="They thought you were being sarcastic and rolled their eyes.", StatChanges={Closeness=-3, Happiness=-2}}}},
-							{Text="Compliment their personality", Outcomes={{Weight=10, ResultText="They seemed genuinely touched by your kind words.", StatChanges={Closeness=8, Happiness=4}}}}
-						}
-					}
-				end
+					GameLogic.ShowPopup(gui, logFrame, encounter)
+				end)
 
-				GameLogic.ShowPopup(gui, logFrame, encounter)
+				item.Parent = listFrame
 			end
-
-			talkBtn.MouseButton1Click:Connect(function() doInteraction("Talk") end)
-			timeBtn.MouseButton1Click:Connect(function() doInteraction("Spend Time") end)
-			compBtn.MouseButton1Click:Connect(function() doInteraction("Compliment") end)
-
-			item.Parent = listFrame
 		end
 	end
 end
