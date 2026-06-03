@@ -139,4 +139,30 @@ function StatsManager.ResetStats()
 	end
 end
 
+function StatsManager.ContinueAs(childData)
+	StatsManager.Stats.IsDead = false
+	local splitName = string.split(childData.Name, " ")
+	StatsManager.Stats.FirstName = splitName[1]
+	if splitName[2] then
+		StatsManager.Stats.LastName = splitName[2]
+	end
+	StatsManager.Stats.Gender = childData.Gender
+	StatsManager.Stats.Age = childData.Age
+	StatsManager.Stats.Race = childData.Race
+	StatsManager.Stats.Stand = childData.Stand
+	StatsManager.Stats.Job = "Unemployed"
+	StatsManager.Stats.Salary = 0
+	StatsManager.Stats.Happiness = 100
+	StatsManager.Stats.Intelligence = math.random(20, 80)
+	StatsManager.Stats.Strength = math.random(20, 80)
+	StatsManager.Stats.Body = math.random(40, 100)
+	StatsManager.Stats.LifeForce = math.random(50, 100)
+	StatsManager.Stats.Luck = math.random(1, 100)
+	StatsManager.Stats.Bizarreness = 0
+	StatsManager.Stats.LifespanRoll = 0.8 + (math.random() * 0.2)
+	StatsManager.Stats.SeenEvents = {}
+	StatsManager.Stats.EventTarget = nil
+	StatsManager.Stats.Relationships = {}
+end
+
 return StatsManager
