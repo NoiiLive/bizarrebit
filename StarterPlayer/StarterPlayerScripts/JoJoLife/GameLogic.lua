@@ -5,6 +5,9 @@ local UIManager = require(script.Parent:WaitForChild("UIManager"))
 local EncounterData = require(script.Parent:WaitForChild("EncounterData"))
 local StatsManager = require(script.Parent:WaitForChild("StatsManager"))
 
+GameLogic.PendingChild = nil
+GameLogic.CurrentRelTab = "Relatives"
+
 function GameLogic.Start(player)
 	StatsManager.ResetStats()
 	local gui = UIBuilder.Build(player)
@@ -18,9 +21,15 @@ function GameLogic.Start(player)
 	local popupOverlay = mainFrame:WaitForChild("PopupOverlay")
 	local relOverlay = mainFrame:WaitForChild("RelationshipsOverlay")
 	local actOverlay = mainFrame:WaitForChild("ActionsOverlay")
+	local inputOverlay = mainFrame:WaitForChild("InputOverlay")
 
-	local relCloseBtn = relOverlay:WaitForChild("RelationshipsFrame"):WaitForChild("CloseButton")
-	local relListFrame = relOverlay:WaitForChild("RelationshipsFrame"):WaitForChild("ListFrame")
+	local relFrame = relOverlay:WaitForChild("RelationshipsFrame")
+	local relCloseBtn = relFrame:WaitForChild("CloseButton")
+	local relListFrame = relFrame:WaitForChild("ListFrame")
+	local tabFrame = relFrame:WaitForChild("TabFrame")
+	local relTabBtn = tabFrame:WaitForChild("RelativesButton")
+	local friTabBtn = tabFrame:WaitForChild("FriendsButton")
+	local famTabBtn = tabFrame:WaitForChild("FamilyButton")
 
 	local actCloseBtn = actOverlay:WaitForChild("ActionsFrame"):WaitForChild("CloseButton")
 	local actListFrame = actOverlay:WaitForChild("ActionsFrame"):WaitForChild("ListFrame")
@@ -31,19 +40,38 @@ function GameLogic.Start(player)
 	UIBuilder.AddLogTitle(logFrame, "YEAR " .. StatsManager.Stats.Year)
 	UIBuilder.AddLogText(logFrame, "You were born into a bizarre world as " .. StatsManager.Stats.FirstName .. " " .. StatsManager.Stats.LastName .. ".", Color3.fromRGB(220, 220, 220))
 
+	relTabBtn.MouseButton1Click:Connect(function()
+		GameLogic.CurrentRelTab = "Relatives"
+		UIManager.PopulateRelationships(relListFrame, gui, logFrame, relOverlay, GameLogic, StatsManager, GameLogic.CurrentRelTab)
+	end)
+
+	friTabBtn.MouseButton1Click:Connect(function()
+		GameLogic.CurrentRelTab = "Friends"
+		UIManager.PopulateRelationships(relListFrame, gui, logFrame, relOverlay, GameLogic, StatsManager, GameLogic.CurrentRelTab)
+	end)
+
+	famTabBtn.MouseButton1Click:Connect(function()
+		GameLogic.CurrentRelTab = "Family"
+		UIManager.PopulateRelationships(relListFrame, gui, logFrame, relOverlay, GameLogic, StatsManager, GameLogic.CurrentRelTab)
+	end)
+
 	ageUpButton.MouseButton1Click:Connect(function()
-		if popupOverlay.Visible or relOverlay.Visible or actOverlay.Visible then return end
+		if popupOverlay.Visible or relOverlay.Visible or actOverlay.Visible or inputOverlay.Visible then return end
 
 		if StatsManager.Stats.IsDead then
-			GameLogic.RestartGame(gui, logFrame)
+			if GameLogic.PendingChild then
+				GameLogic.ContinueAsChild(gui, logFrame, GameLogic.PendingChild)
+			else
+				GameLogic.RestartGame(gui, logFrame)
+			end
 		else
 			GameLogic.AgeUp(gui, logFrame)
 		end
 	end)
 
 	relButton.MouseButton1Click:Connect(function()
-		if popupOverlay.Visible or actOverlay.Visible then return end
-		UIManager.PopulateRelationships(relListFrame, gui, logFrame, relOverlay, GameLogic, StatsManager)
+		if popupOverlay.Visible or actOverlay.Visible or inputOverlay.Visible then return end
+		UIManager.PopulateRelationships(relListFrame, gui, logFrame, relOverlay, GameLogic, StatsManager, GameLogic.CurrentRelTab)
 		relOverlay.Visible = true
 	end)
 
@@ -52,7 +80,7 @@ function GameLogic.Start(player)
 	end)
 
 	actButton.MouseButton1Click:Connect(function()
-		if popupOverlay.Visible or relOverlay.Visible then return end
+		if popupOverlay.Visible or relOverlay.Visible or inputOverlay.Visible then return end
 		UIManager.PopulateActions(actListFrame, gui, logFrame, actOverlay, GameLogic, StatsManager)
 		actOverlay.Visible = true
 	end)
@@ -62,8 +90,116 @@ function GameLogic.Start(player)
 	end)
 end
 
+function GameLogic.FilterTextClient(text)
+	local filterRemote = game:GetService("ReplicatedStorage"):WaitForChild("FilterTextRF", 5)
+	if filterRemote then
+		local success, isClean = pcall(function()
+			return filterRemote:InvokeServer(text)
+		end)
+		if success then
+			return isClean
+		end
+	end
+	warn("FilterTextRF not found or failed. Blocking text to ensure safety guidelines.")
+	return false
+end
+
+function GameLogic.ShowInputPopup(gui, titleText, defaultText, callback)
+	local inputOverlay = gui.MainFrame.InputOverlay
+	local inputFrame = inputOverlay.InputFrame
+	inputFrame.Title.Text = titleText
+	inputFrame.InputBox.Text = defaultText
+	inputFrame.InputBox.PlaceholderText = "Enter name here..."
+
+	if GameLogic._inputConn then GameLogic._inputConn:Disconnect() end
+
+	GameLogic._inputConn = inputFrame.ConfirmButton.MouseButton1Click:Connect(function()
+		local text = inputFrame.InputBox.Text
+		if text == "" then text = defaultText end
+
+		local isClean = GameLogic.FilterTextClient(text)
+		if not isClean then
+			inputFrame.InputBox.Text = ""
+			inputFrame.InputBox.PlaceholderText = "Name blocked by Roblox Filter! Try again."
+			return
+		end
+
+		GameLogic._inputConn:Disconnect()
+		inputOverlay.Visible = false
+		callback(text)
+	end)
+
+	inputOverlay.Visible = true
+end
+
+function GameLogic.TriggerMarriage(gui, logFrame, rel)
+	local popupOverlay = gui.MainFrame:WaitForChild("PopupOverlay")
+	local popupFrame = popupOverlay:WaitForChild("PopupFrame")
+	local popupText = popupFrame:WaitForChild("PopupText")
+	local optionsFrame = popupFrame:WaitForChild("OptionsFrame")
+
+	local spouseSplit = string.split(rel.Name, " ")
+	local spouseFirst = spouseSplit[1]
+	local spouseLast = spouseSplit[2] or ""
+	local myLast = StatsManager.Stats.LastName
+
+	popupText.Text = "You and " .. rel.Name .. " are getting married! Which last name will you take?"
+	UIBuilder.ClearOptions(optionsFrame)
+
+	local function finalizeMarriage(newMyLast, newSpouseLast, logMessage)
+		popupOverlay.Visible = false
+		rel.Role = "Spouse"
+
+		StatsManager.Stats.LastName = newMyLast
+		rel.Name = spouseFirst .. " " .. newSpouseLast
+
+		StatsManager.Stats.Happiness = math.clamp(StatsManager.Stats.Happiness + 20, 0, 100)
+		rel.Closeness = math.clamp(rel.Closeness + 20, 0, 100)
+
+		UIBuilder.AddLogText(logFrame, logMessage, Color3.fromRGB(255, 200, 255))
+		UIManager.UpdateStatsUI(gui, StatsManager)
+		logFrame.CanvasPosition = Vector2.new(0, logFrame.AbsoluteCanvasSize.Y)
+	end
+
+	local btn1 = UIBuilder.CreateOptionButton(optionsFrame, "Take their last name (" .. spouseLast .. ")")
+	btn1.MouseButton1Click:Connect(function()
+		finalizeMarriage(spouseLast, spouseLast, "You married " .. spouseFirst .. " and took their last name! You are now " .. StatsManager.Stats.FirstName .. " " .. spouseLast .. ".")
+	end)
+
+	local btn2 = UIBuilder.CreateOptionButton(optionsFrame, "Keep your last name (" .. myLast .. ")")
+	btn2.MouseButton1Click:Connect(function()
+		finalizeMarriage(myLast, myLast, "You married " .. spouseFirst .. " and they took your last name! They are now " .. spouseFirst .. " " .. myLast .. ".")
+	end)
+
+	local btn3 = UIBuilder.CreateOptionButton(optionsFrame, "Hyphenate (" .. myLast .. "-" .. spouseLast .. ")")
+	btn3.MouseButton1Click:Connect(function()
+		local hyphenated = myLast .. "-" .. spouseLast
+		finalizeMarriage(hyphenated, hyphenated, "You married " .. spouseFirst .. " and hyphenated your names! You are now " .. StatsManager.Stats.FirstName .. " " .. hyphenated .. ".")
+	end)
+
+	popupOverlay.Visible = true
+end
+
+function GameLogic.ContinueAsChild(gui, logFrame, childData)
+	StatsManager.ContinueAs(childData)
+	GameLogic.PendingChild = nil
+	UIBuilder.ClearLogs(logFrame)
+
+	local mainFrame = gui:WaitForChild("MainFrame")
+	local actionFrame = mainFrame:WaitForChild("ActionFrame")
+	local ageUpButton = actionFrame:WaitForChild("AgeUpButton")
+
+	ageUpButton.Text = "AGE UP"
+	ageUpButton.BackgroundColor3 = Color3.fromRGB(80, 30, 140)
+
+	UIManager.UpdateStatsUI(gui, StatsManager)
+	UIBuilder.AddLogTitle(logFrame, "YEAR " .. StatsManager.Stats.Year)
+	UIBuilder.AddLogText(logFrame, "You are now continuing the lineage as " .. StatsManager.Stats.FirstName .. " " .. StatsManager.Stats.LastName .. ".", Color3.fromRGB(220, 220, 220))
+end
+
 function GameLogic.RestartGame(gui, logFrame)
 	StatsManager.ResetStats()
+	GameLogic.PendingChild = nil
 	UIBuilder.ClearLogs(logFrame)
 
 	local mainFrame = gui:WaitForChild("MainFrame")
@@ -87,7 +223,22 @@ function GameLogic.Die(gui, logFrame, reason)
 	local actionFrame = mainFrame:WaitForChild("ActionFrame")
 	local ageUpButton = actionFrame:WaitForChild("AgeUpButton")
 
-	ageUpButton.Text = "PLAY AGAIN"
+	local childToPlay = nil
+	for _, rel in ipairs(StatsManager.Stats.Relationships) do
+		if (rel.Role == "Son" or rel.Role == "Daughter") and not rel.IsDead then
+			childToPlay = rel
+			break
+		end
+	end
+
+	if childToPlay then
+		ageUpButton.Text = "PLAY AS " .. string.upper(childToPlay.Name)
+		GameLogic.PendingChild = childToPlay
+	else
+		ageUpButton.Text = "PLAY AGAIN"
+		GameLogic.PendingChild = nil
+	end
+
 	ageUpButton.BackgroundColor3 = Color3.fromRGB(200, 50, 60)
 	logFrame.CanvasPosition = Vector2.new(0, logFrame.AbsoluteCanvasSize.Y)
 end
